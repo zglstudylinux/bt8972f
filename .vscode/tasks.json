@@ -1,0 +1,71 @@
+{
+    // 中科蓝讯 SDK 命令行构建任务（build.ps1 由 bluetrum-sdk-build skill 生成）
+    // 本工作区 SDK 根在 app\ 子目录，产品目录为 microphone
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy", "Bypass",
+                "-NoProfile",
+                "-File", "${workspaceFolder}/app/projects/microphone/build.ps1"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "clear": false
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy", "Bypass",
+                "-NoProfile",
+                "-File", "${workspaceFolder}/app/projects/microphone/build.ps1",
+                "-Clean"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "rebuild",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy", "Bypass",
+                "-NoProfile",
+                "-File", "${workspaceFolder}/app/projects/microphone/build.ps1",
+                "-Rebuild"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "clear": false
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ]
+}
