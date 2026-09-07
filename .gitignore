@@ -1,0 +1,6 @@
+# 编译中间产物（保留最终镜像 app.rv32/app.bin/app.dcf）
+app/projects/*/Output/obj/
+
+# 临时文件
+*.log
+*.tmp

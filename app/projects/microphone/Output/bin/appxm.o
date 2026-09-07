@@ -1,0 +1,5 @@
+depend(0x01030500);
+setflash(1, 0x100000, 1, 1, 0);
+setspace(0x5000);
+make(dcf_buf, header.bin, app.bin, res.bin, xcfg.bin, updater.bin);
+save(dcf_buf, app.dcf);
