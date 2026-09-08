@@ -11,6 +11,10 @@
 #define TX2MAP_PE7                      (1 << 8)
 #define RX2MAP_PB1                      (2 << 12)
 
+#define UART2_TX_TEST_FRAME_SIZE        72
+#define UART2_TX_TEST_PAYLOAD_SIZE      64
+#define UART2_TX_TEST_INTERVAL          100
+
 typedef struct {
     volatile u16 rx_w_cnt;
     volatile u16 rx_r_cnt;
@@ -72,6 +76,54 @@ static void uart2_com_echo_process(void)
         }
         bsp_uart2_com_get(&ch);
         bsp_uart2_com_put(ch);
+    }
+}
+#endif
+
+#if UART2_COM_TX_TEST_EN
+static u16 uart2_com_crc16(const u8 *buf, u8 len)
+{
+    u16 crc = 0xffff;
+    u8 i;
+
+    while (len--) {
+        crc ^= *buf++;
+        for (i = 0; i < 8; i++) {
+            crc = (crc & 1) ? ((crc >> 1) ^ 0xa001) : (crc >> 1);
+        }
+    }
+    return crc;
+}
+
+static void uart2_com_tx_test_process(void)
+{
+    static u32 test_tick;
+    static u16 sequence;
+    u8 frame[UART2_TX_TEST_FRAME_SIZE];
+    u16 crc;
+    u8 i;
+
+    if (!tick_check_expire(test_tick, UART2_TX_TEST_INTERVAL) ||
+        !bsp_uart2_com_tx_idle()) {
+        return;
+    }
+    test_tick = tick_get();
+
+    frame[0] = 0x55;
+    frame[1] = 0xaa;
+    frame[2] = 0x5a;
+    frame[3] = 0xa5;
+    frame[4] = (u8)sequence;
+    frame[5] = (u8)(sequence >> 8);
+    for (i = 0; i < UART2_TX_TEST_PAYLOAD_SIZE; i++) {
+        frame[6 + i] = (u8)(i + sequence);
+    }
+    crc = uart2_com_crc16(frame, UART2_TX_TEST_FRAME_SIZE - 2);
+    frame[UART2_TX_TEST_FRAME_SIZE - 2] = (u8)crc;
+    frame[UART2_TX_TEST_FRAME_SIZE - 1] = (u8)(crc >> 8);
+
+    if (bsp_uart2_com_write(frame, sizeof(frame)) == sizeof(frame)) {
+        sequence++;
     }
 }
 #endif
@@ -165,8 +217,9 @@ void bsp_uart2_com_init(u32 baudrate)
     sys_irq_init(IRQ_UART_VECTOR, 0, uart2_com_irq);
 #endif
 
-    printf("uart2 com ready: TX=PE7 RX=PB1 baud=%d test=%d irq=%d\n",
-           (int)baudrate, UART2_COM_RX_TEST_EN, UART2_COM_RX_IRQ_TEST_EN);
+    printf("uart2 com ready: TX=PE7 RX=PB1 baud=%d rx_test=%d tx_test=%d irq=%d\n",
+           (int)baudrate, UART2_COM_RX_TEST_EN, UART2_COM_TX_TEST_EN,
+           UART2_COM_RX_IRQ_TEST_EN);
 }
 
 AT(.com_text.uart2.com)
@@ -236,7 +289,11 @@ void bsp_uart2_com_process(void)
 #endif
     uart2_com_tx_process();
 
-#if UART2_COM_RX_TEST_EN
+#if UART2_COM_TX_TEST_EN
+    uart2_com_tx_test_process();
+#endif
+
+#if UART2_COM_RX_TEST_EN || UART2_COM_TX_TEST_EN
     {
         static u32 diag_tick;
 

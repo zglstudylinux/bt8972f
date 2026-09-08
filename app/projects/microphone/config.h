@@ -37,6 +37,7 @@
 #define UART2_COM_EN                    1                       //使能UART2普通串口(TX=PE7,RX=PB1)，见手册5.6.4
 #define UART2_COM_BAUD                  115200                  //UART2波特率，当前时钟源为24MHz XOSC
 #define UART2_COM_RX_TEST_EN            0                       //RX板测模式：UART2原样回显，诊断只输出到UART0
+#define UART2_COM_TX_TEST_EN            0                       //TX板测模式：周期发送带序号和CRC16的二进制帧
 #define UART2_COM_RX_IRQ_TEST_EN        0                       //实验性共享IRQ14；实测无间隔流更差，默认禁用
 #define PWRON_ENTER_BTMODE_EN           0                       //是否上电默认进蓝牙模式
 #define SLEEP_DAC_OFF_EN                (is_sleep_dac_off_enable()) //sfunc_sleep是否关闭DAC， 复用MICL检测方案不能关DAC。

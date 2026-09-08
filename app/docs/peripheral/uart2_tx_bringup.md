@@ -177,6 +177,55 @@ powershell -ExecutionPolicy Bypass -NoProfile -File .\build.ps1 -Rebuild
 
 当前 `UART2_COM_RX_TEST_EN=0`，业务 RX 队列不会被测试回显消费。需要回显验证时临时改为 1，重新构建和烧录，然后使用 `test-uart2.ps1`。
 
+独立 TX 测试使用 `UART2_COM_TX_TEST_EN=1`。固件每 100 ms 发送一个 72 字节二进制帧：`55 AA 5A A5` 同步头、16 位递增序号、64 字节确定性 payload，以及 CRC-16/MODBUS。主机使用以下命令连续校验帧长度、序号、payload 和 CRC：
+
+```powershell
+powershell -ExecutionPolicy Bypass -NoProfile -File .\test-uart2-tx.ps1 `
+  -Port COM17 -BaudRate 115200 -FrameCount 100
+```
+
+测试完成后应将 `UART2_COM_TX_TEST_EN` 恢复为 0，避免测试流量占用业务 TX 队列。
+
+### 115200 bps 独立 TX 实板结果（2026-09-08）
+
+测试环境：
+
+- UART2 TX：PE7 → COM17 RX；
+- UART0 debug：PB3 → COM9；
+- 串口格式：115200 bps、8N2；
+- 固件每 100 ms 发送一个 72 字节测试帧；
+- 主机命令：`test-uart2-tx.ps1 -Port COM17 -BaudRate 115200 -FrameCount 100 -TimeoutMs 20000`。
+
+主机校验结果：
+
+```text
+valid=100/100
+first=329
+last=428
+crc_errors=0
+payload_errors=0
+sequence_errors=0
+discarded_bytes=0
+elapsed_ms=9958
+```
+
+UART0 同期统计持续满足：
+
+```text
+tx_q == tx_done
+tx_ovf == 0
+rx == pending == irq == 0
+UART2CON  = 0x111101f1
+UART2CPND = 0x00000000
+UART2BAUD = 0x00cf00cf
+FUNCMCON2 = 0x00002100
+```
+
+因此可以确认：当前 24 MHz XOSC、`div=207`、8N2 配置下，UART2 TX 在 115200 请求波特率（推算实际约 115384.615 bps）连续发送 100 个测试帧、共 7200 字节时，主机未检测到丢帧、重复、乱序、payload 错误或 CRC 错误。该结论只覆盖本次硬件、适配器和测试时长，不自动证明更高波特率或无限持续时间无误码。
+
+测试后源码已恢复 `UART2_COM_TX_TEST_EN=0`；板上仍运行测试固件时会继续输出测试帧，烧录最终默认固件后停止。
+
+
 普通 UART2 RX 已确认：特殊字节、重复字节以及脚本 1 ms 间隔均可正确接收；115200 bps 无间隔连续流在轮询和实验性 IRQ14 模式下都会丢包。完整数据和原因分析见 [uart2_rx_bringup.md](uart2_rx_bringup.md)。
 
 `uart2_key_mode()` 会将 UART2 切换至 VUSB 并重写时钟、BAUD、CON 和映射。当前调用路径紧接软件复位；若未来取消复位，必须完整重新初始化 UART2 COM。切换前若有业务 TX，还应先等待 `bsp_uart2_com_tx_idle()`，或明确允许丢弃尾部数据。

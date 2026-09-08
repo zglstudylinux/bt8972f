@@ -10249,24 +10249,24 @@ LOAD Output\obj\projects\microphone\port\port_update.o
                 0x100250ac                bsp_saradc_init
                 0x100250f2                bsp_saradc_exit
  .text.bsp_uart2_com_init
-                0x100250f6      0x16e Output\obj\bsp\bsp_uart2_com.o
+                0x100250f6      0x170 Output\obj\bsp\bsp_uart2_com.o
                 0x100250f6                bsp_uart2_com_init
  .text.func_usbdev_insert
-                0x10025264       0x56 Output\obj\functions\func.o
-                0x10025264                func_usbdev_insert
+                0x10025266       0x56 Output\obj\functions\func.o
+                0x10025266                func_usbdev_insert
  .text.func_usbdev_remove
-                0x100252ba       0x2a Output\obj\functions\func.o
-                0x100252ba                func_usbdev_remove
+                0x100252bc       0x2a Output\obj\functions\func.o
+                0x100252bc                func_usbdev_remove
  .text.lowbat_warning_proc
-                0x100252e4       0x2e Output\obj\functions\func.o
-                0x100252e4                lowbat_warning_proc
+                0x100252e6       0x2e Output\obj\functions\func.o
+                0x100252e6                lowbat_warning_proc
  .text.lowbat_warning_start
-                0x10025312       0x1e Output\obj\functions\func.o
-                0x10025312                lowbat_warning_start
+                0x10025314       0x1e Output\obj\functions\func.o
+                0x10025314                lowbat_warning_start
  .text.lowbat_warning_stop
-                0x10025330       0x1a Output\obj\functions\func.o
-                0x10025330                lowbat_warning_stop
- *fill*         0x1002534a        0x2 
+                0x10025332       0x1a Output\obj\functions\func.o
+                0x10025332                lowbat_warning_stop
+ *fill*         0x1002534c        0x0 
  .text.func.msg
                 0x1002534c      0x340 Output\obj\functions\func.o
                 0x1002534c                lowbat_process
@@ -14812,818 +14812,818 @@ LOAD Output\obj\projects\microphone\port\port_update.o
  *(.rodata*)
  *fill*         0x100611fc        0x0 
  .rodata.str1.4
-                0x100611fc     0x1adf Output\obj\bsp\bsp_uart2_com.o
-                                 0x4f (size before relaxing)
+                0x100611fc     0x1aef Output\obj\bsp\bsp_uart2_com.o
+                                 0x5d (size before relaxing)
  .rodata.str1.4
-                0x10062cdb       0xc0 Output\obj\functions\func.o
- *fill*         0x10062cdb        0x1 
- .rodata        0x10062cdc       0xa1 Output\obj\functions\func.o
+                0x10062ceb       0xc0 Output\obj\functions\func.o
+ *fill*         0x10062ceb        0x1 
+ .rodata        0x10062cec       0xa1 Output\obj\functions\func.o
  .rodata.str1.4
-                0x10062d7d       0x54 Output\obj\functions\func_adapter.o
- *fill*         0x10062d7d        0x3 
- .rodata        0x10062d80        0xd Output\obj\functions\func_adapter.o
- .rodata.str1.4
-                0x10062d8d       0x20 Output\obj\functions\func_bt.o
- .rodata.str1.4
-                0x10062d8d        0x4 Output\obj\functions\func_bt_dut.o
+                0x10062d8d       0x54 Output\obj\functions\func_adapter.o
  *fill*         0x10062d8d        0x3 
- .rodata        0x10062d90        0xc Output\obj\functions\func_bt_dut.o
+ .rodata        0x10062d90        0xd Output\obj\functions\func_adapter.o
+ .rodata.str1.4
+                0x10062d9d       0x20 Output\obj\functions\func_bt.o
+ .rodata.str1.4
+                0x10062d9d        0x4 Output\obj\functions\func_bt_dut.o
+ *fill*         0x10062d9d        0x3 
+ .rodata        0x10062da0        0xc Output\obj\functions\func_bt_dut.o
  .rodata.bt.dut
-                0x10062d9c        0x4 Output\obj\functions\func_bt_dut.o
+                0x10062dac        0x4 Output\obj\functions\func_bt_dut.o
  .rodata.str1.4
-                0x10062da0        0x4 Output\obj\functions\func_charge.o
- .rodata        0x10062da0        0xc Output\obj\functions\func_charge.o
+                0x10062db0        0x4 Output\obj\functions\func_charge.o
+ .rodata        0x10062db0        0xc Output\obj\functions\func_charge.o
  .rodata.charge
-                0x10062dac        0x8 Output\obj\functions\func_charge.o
-                0x10062dac                ch_bled_timeout_tbl
+                0x10062dbc        0x8 Output\obj\functions\func_charge.o
+                0x10062dbc                ch_bled_timeout_tbl
  .rodata.str1.4
-                0x10062db4       0x88 Output\obj\functions\func_device.o
- .rodata        0x10062db4        0xc Output\obj\functions\func_device.o
+                0x10062dc4       0x88 Output\obj\functions\func_device.o
+ .rodata        0x10062dc4        0xc Output\obj\functions\func_device.o
  .rodata.str1.4
-                0x10062dc0       0x18 Output\obj\functions\func_lowpwr.o
- .rodata        0x10062dc0        0xc Output\obj\functions\func_lowpwr.o
+                0x10062dd0       0x18 Output\obj\functions\func_lowpwr.o
+ .rodata        0x10062dd0        0xc Output\obj\functions\func_lowpwr.o
  .rodata.str1.4
-                0x10062dcc        0x4 Output\obj\functions\sfunc_bt_ota.o
- .rodata        0x10062dcc        0xd Output\obj\functions\sfunc_bt_ota.o
+                0x10062ddc        0x4 Output\obj\functions\sfunc_bt_ota.o
+ .rodata        0x10062ddc        0xd Output\obj\functions\sfunc_bt_ota.o
  .rodata.str1.4
-                0x10062dd9       0x35 Output\obj\functions\sfunc_bt_ring.o
- *fill*         0x10062dd9        0x3 
- .rodata        0x10062ddc        0xe Output\obj\functions\sfunc_bt_ring.o
+                0x10062de9       0x35 Output\obj\functions\sfunc_bt_ring.o
+ *fill*         0x10062de9        0x3 
+ .rodata        0x10062dec        0xe Output\obj\functions\sfunc_bt_ring.o
  .rodata.str1.4
-                0x10062dea       0x1c Output\obj\functions\sfunc_sleep.o
- *fill*         0x10062dea        0x2 
- .rodata        0x10062dec        0xc Output\obj\functions\sfunc_sleep.o
+                0x10062dfa       0x1c Output\obj\functions\sfunc_sleep.o
+ *fill*         0x10062dfa        0x2 
+ .rodata        0x10062dfc        0xc Output\obj\functions\sfunc_sleep.o
  .rodata.str1.4
-                0x10062df8       0x76 Output\obj\libs\strong_le.o
+                0x10062e08       0x76 Output\obj\libs\strong_le.o
  .rodata.le.hci
-                0x10062df8       0x14 Output\obj\libs\strong_le.o
-                0x10062df8                hci_evt_le_desc_tab
-                0x10062e00                hci_cmd_desc_tab_le
+                0x10062e08       0x14 Output\obj\libs\strong_le.o
+                0x10062e08                hci_evt_le_desc_tab
+                0x10062e10                hci_cmd_desc_tab_le
  .rodata.le.ll_cntl
-                0x10062e0c        0xc Output\obj\libs\strong_le.o
-                0x10062e0c                ll_cntl_pdu_tbl
+                0x10062e1c        0xc Output\obj\libs\strong_le.o
+                0x10062e1c                ll_cntl_pdu_tbl
  .rodata.le.ll_proc
-                0x10062e18       0x24 Output\obj\libs\strong_le.o
-                0x10062e18                mgr_hci_cmd_tbl
-                0x10062e20                ll_msg_tbl
-                0x10062e28                ll_hci_cmd_tbl
-                0x10062e30                ll_msg_env
- .rodata.mic    0x10062e3c        0x5 Output\obj\modules\audio\bsp_audio.o
-                0x10062e3c                mic_mapping_tbl
+                0x10062e28       0x24 Output\obj\libs\strong_le.o
+                0x10062e28                mgr_hci_cmd_tbl
+                0x10062e30                ll_msg_tbl
+                0x10062e38                ll_hci_cmd_tbl
+                0x10062e40                ll_msg_env
+ .rodata.mic    0x10062e4c        0x5 Output\obj\modules\audio\bsp_audio.o
+                0x10062e4c                mic_mapping_tbl
  .rodata.str1.4
-                0x10062e41       0x29 Output\obj\modules\audio\bsp_dac.o
- *fill*         0x10062e41        0x3 
- .rodata        0x10062e44        0x9 Output\obj\modules\audio\bsp_dac.o
- *fill*         0x10062e4d        0x3 
- .rodata.dac    0x10062e50       0xb1 Output\obj\modules\audio\bsp_dac.o
-                0x10062e50                dac_dvol_tbl_db
-                0x10062ecc                dac_dvol_tbl_16
-                0x10062ee0                dac_dvol_tbl_32
- *fill*         0x10062f01        0x3 
- .rodata        0x10062f04       0x22 Output\obj\modules\audio\bsp_eq.o
-                0x10062f10                tbl_drc_version
-                0x10062f1c                tbl_eq_version
+                0x10062e51       0x29 Output\obj\modules\audio\bsp_dac.o
+ *fill*         0x10062e51        0x3 
+ .rodata        0x10062e54        0x9 Output\obj\modules\audio\bsp_dac.o
+ *fill*         0x10062e5d        0x3 
+ .rodata.dac    0x10062e60       0xb1 Output\obj\modules\audio\bsp_dac.o
+                0x10062e60                dac_dvol_tbl_db
+                0x10062edc                dac_dvol_tbl_16
+                0x10062ef0                dac_dvol_tbl_32
+ *fill*         0x10062f11        0x3 
+ .rodata        0x10062f14       0x22 Output\obj\modules\audio\bsp_eq.o
+                0x10062f20                tbl_drc_version
+                0x10062f2c                tbl_eq_version
  .rodata.str1.4
-                0x10062f26       0x15 Output\obj\modules\audio\mic.o
+                0x10062f36       0x15 Output\obj\modules\audio\mic.o
  .rodata.str1.4
-                0x10062f26        0x4 Output\obj\modules\bluetooth\app\app_test\app_test.o
+                0x10062f36        0x4 Output\obj\modules\bluetooth\app\app_test\app_test.o
  .rodata.str1.4
-                0x10062f26       0x15 Output\obj\modules\bluetooth\bt\spp.o
- *fill*         0x10062f26        0x2 
- .rodata        0x10062f28       0x87 Output\obj\modules\bluetooth\bt\spp.o
-                0x10062f58                sdp_spp_service_record
- *fill*         0x10062faf        0x1 
+                0x10062f36       0x15 Output\obj\modules\bluetooth\bt\spp.o
+ *fill*         0x10062f36        0x2 
+ .rodata        0x10062f38       0x87 Output\obj\modules\bluetooth\bt\spp.o
+                0x10062f68                sdp_spp_service_record
+ *fill*         0x10062fbf        0x1 
  .rodata.ble.tbl
-                0x10062fb0        0x8 Output\obj\modules\bluetooth\bt\spp.o
-                0x10062fb0                spp_pool_tbl
+                0x10062fc0        0x8 Output\obj\modules\bluetooth\bt\spp.o
+                0x10062fc0                spp_pool_tbl
  .rodata.str1.4
-                0x10062fb8       0x18 Output\obj\modules\charge\charge.o
+                0x10062fc8       0x18 Output\obj\modules\charge\charge.o
  .rodata.str1.4
-                0x10062fb8        0x4 Output\obj\modules\effect\mic_effect.o
- .rodata        0x10062fb8       0xb8 Output\obj\modules\effect\mic_effect.o
+                0x10062fc8        0x4 Output\obj\modules\effect\mic_effect.o
+ .rodata        0x10062fc8       0xb8 Output\obj\modules\effect\mic_effect.o
  .rodata.str1.4
-                0x10063070       0x4f Output\obj\modules\tool\toolkit.o
- .rodata        0x10063070       0x1f Output\obj\modules\usb_device\usb_enum.o
-                0x10063070                ude_product_name
-                0x10063080                ude_serial_number
- *fill*         0x1006308f        0x1 
+                0x10063080       0x4f Output\obj\modules\tool\toolkit.o
+ .rodata        0x10063080       0x1f Output\obj\modules\usb_device\usb_enum.o
+                0x10063080                ude_product_name
+                0x10063090                ude_serial_number
+ *fill*         0x1006309f        0x1 
  .rodata.piano.table
-                0x10063090       0x80 Output\obj\modules\warning\piano.o
-                0x10063090                warning_piano_tbl
-                0x100630c0                warning_tone_tbl
+                0x100630a0       0x80 Output\obj\modules\warning\piano.o
+                0x100630a0                warning_piano_tbl
+                0x100630d0                warning_tone_tbl
  .rodata.piano.tbl
-                0x10063110      0x120 Output\obj\modules\warning\piano.o
+                0x10063120      0x120 Output\obj\modules\warning\piano.o
  .rodata.str1.4
-                0x10063230       0xab Output\obj\modules\warning\res_play.o
+                0x10063240       0xab Output\obj\modules\warning\res_play.o
  .rodata.res.tbl
-                0x10063230        0x8 Output\obj\modules\warning\res_tbl.o
-                0x10063230                res_piano_len
-                0x10063234                res_tone_len
+                0x10063240        0x8 Output\obj\modules\warning\res_tbl.o
+                0x10063240                res_piano_len
+                0x10063244                res_tone_len
  .rodata.str1.4
-                0x10063238       0x15 Output\obj\modules\wireless\mic_proc.o
+                0x10063248       0x15 Output\obj\modules\wireless\mic_proc.o
  .rodata.str1.4
-                0x10063238      0x123 Output\obj\modules\wireless\wireless.o
+                0x10063248      0x123 Output\obj\modules\wireless\wireless.o
  .rodata.str1.4
-                0x10063238       0x17 Output\obj\modules\wireless\wireless_cmd.o
+                0x10063248       0x17 Output\obj\modules\wireless\wireless_cmd.o
  .rodata.str1.4
-                0x10063238       0x12 Output\obj\modules\wireless\wireless_cmd_api.o
- .rodata        0x10063238        0xc Output\obj\modules\wireless\wireless_cmd_api.o
+                0x10063248       0x12 Output\obj\modules\wireless\wireless_cmd_api.o
+ .rodata        0x10063248        0xc Output\obj\modules\wireless\wireless_cmd_api.o
  .rodata.str1.4
-                0x10063244       0x33 Output\obj\modules\wireless\wireless_proc.o
+                0x10063254       0x33 Output\obj\modules\wireless\wireless_proc.o
  .rodata.str1.4
-                0x10063244       0xe5 Output\obj\system\load_code.o
+                0x10063254       0xe5 Output\obj\system\load_code.o
  .rodata.lock.str
-                0x10063244      0x120 Output\obj\system\load_code.o
-                0x10063244                lock_record
+                0x10063254      0x120 Output\obj\system\load_code.o
+                0x10063254                lock_record
  .rodata.str1.4
-                0x10063364       0x29 Output\obj\system\system.o
+                0x10063374       0x29 Output\obj\system\system.o
  .rodata.func.table
-                0x10063364        0x2 Output\obj\projects\microphone\config.o
-                0x10063364                func_sort_table
- *fill*         0x10063366        0x2 
- .rodata        0x10063368      0x168 Output\obj\projects\microphone\effect.o
-                0x10063368                effect_info
+                0x10063374        0x2 Output\obj\projects\microphone\config.o
+                0x10063374                func_sort_table
+ *fill*         0x10063376        0x2 
+ .rodata        0x10063378      0x168 Output\obj\projects\microphone\effect.o
+                0x10063378                effect_info
  .rodata.str1.4
-                0x100634d0       0x3f Output\obj\projects\microphone\main.o
+                0x100634e0       0x3f Output\obj\projects\microphone\main.o
  .rodata.str1.4
-                0x100634d0       0x25 Output\obj\projects\microphone\message\msg_adapter.o
- .rodata        0x100634d0       0x5c Output\obj\projects\microphone\plugin\effect_table.o
-                0x100634d0                effect_offset_tbl
-                0x100634e4                effect_update_callback_tbl
- .rodata        0x1006352c      0x2c0 Output\obj\projects\microphone\plugin\multi_lang.o
-                0x1006352c                zh_lang_tbl
-                0x1006368c                en_lang_tbl
- .rodata        0x100637ec       0xd0 Output\obj\projects\microphone\port\port_key.o
-                0x100637ec                bt_music_key_msg_tbl
-                0x1006380c                key1_msc_cfg_tab
-                0x1006382c                bt_call_key_msg_tbl
-                0x1006384c                key1_call_cfg_tab
-                0x1006385c                usbdev_key_msg_tbl
-                0x1006387c                device_key_msg_tbl
-                0x1006389c                adapter_key_msg_tbl
+                0x100634e0       0x25 Output\obj\projects\microphone\message\msg_adapter.o
+ .rodata        0x100634e0       0x5c Output\obj\projects\microphone\plugin\effect_table.o
+                0x100634e0                effect_offset_tbl
+                0x100634f4                effect_update_callback_tbl
+ .rodata        0x1006353c      0x2c0 Output\obj\projects\microphone\plugin\multi_lang.o
+                0x1006353c                zh_lang_tbl
+                0x1006369c                en_lang_tbl
+ .rodata        0x100637fc       0xd0 Output\obj\projects\microphone\port\port_key.o
+                0x100637fc                bt_music_key_msg_tbl
+                0x1006381c                key1_msc_cfg_tab
+                0x1006383c                bt_call_key_msg_tbl
+                0x1006385c                key1_call_cfg_tab
+                0x1006386c                usbdev_key_msg_tbl
+                0x1006388c                device_key_msg_tbl
+                0x100638ac                adapter_key_msg_tbl
  .rodata.led.cfg
-                0x100638bc        0xc Output\obj\projects\microphone\port\port_led.o
-                0x100638bc                led_cfg_poweron
-                0x100638c0                led_cfg_poweroff
-                0x100638c4                led_cfg_idle
+                0x100638cc        0xc Output\obj\projects\microphone\port\port_led.o
+                0x100638cc                led_cfg_poweron
+                0x100638d0                led_cfg_poweroff
+                0x100638d4                led_cfg_idle
  .rodata.led.cfg.bt
-                0x100638c8       0x1c Output\obj\projects\microphone\port\port_led.o
-                0x100638c8                led_cfg_btinit
-                0x100638cc                led_cfg_reconnect
-                0x100638d0                led_cfg_pairing
-                0x100638d4                led_cfg_connected
-                0x100638d8                led_cfg_playing
-                0x100638dc                led_cfg_calling
-                0x100638e0                led_cfg_ring
- .rodata        0x100638e4       0x23 ..\..\libs\libplatform.a(audio.o)
- *fill*         0x10063907        0x1 
+                0x100638d8       0x1c Output\obj\projects\microphone\port\port_led.o
+                0x100638d8                led_cfg_btinit
+                0x100638dc                led_cfg_reconnect
+                0x100638e0                led_cfg_pairing
+                0x100638e4                led_cfg_connected
+                0x100638e8                led_cfg_playing
+                0x100638ec                led_cfg_calling
+                0x100638f0                led_cfg_ring
+ .rodata        0x100638f4       0x23 ..\..\libs\libplatform.a(audio.o)
+ *fill*         0x10063917        0x1 
  .rodata.sdadc.gain_tbl
-                0x10063908      0x100 ..\..\libs\libplatform.a(audio_drc.o)
-                0x10063908                sdadc_soft_gain_tbl_64
- .rodata        0x10063a08      0x168 ..\..\libs\libplatform.a(audio_eq.o)
-                0x10063ad0                eq_bypass_coef_tbl
+                0x10063918      0x100 ..\..\libs\libplatform.a(audio_drc.o)
+                0x10063918                sdadc_soft_gain_tbl_64
+ .rodata        0x10063a18      0x168 ..\..\libs\libplatform.a(audio_eq.o)
+                0x10063ae0                eq_bypass_coef_tbl
  .rodata.str1.4
-                0x10063b70        0x8 ..\..\libs\libplatform.a(dac_dma.o)
+                0x10063b80        0x8 ..\..\libs\libplatform.a(dac_dma.o)
  .rodata.str1.4
-                0x10063b70        0xe ..\..\libs\libplatform.a(dac_thd.o)
+                0x10063b80        0xe ..\..\libs\libplatform.a(dac_thd.o)
  .rodata.sdadc.gain_tbl
-                0x10063b70       0xa0 ..\..\libs\libplatform.a(sdadc.o)
-                0x10063b70                tbl_sdadc_dig_gain
+                0x10063b80       0xa0 ..\..\libs\libplatform.a(sdadc.o)
+                0x10063b80                tbl_sdadc_dig_gain
  .rodata.sdadc.spr_tbl
-                0x10063c10       0x14 ..\..\libs\libplatform.a(sdadc.o)
+                0x10063c20       0x14 ..\..\libs\libplatform.a(sdadc.o)
  .rodata.str1.4
-                0x10063c24        0xe ..\..\libs\libplatform.a(bt_alg.o)
- .rodata        0x10063c24       0x48 ..\..\libs\libplatform.a(bt_pll.o)
-                0x10063c24                adpll_ajust_table
+                0x10063c34        0xe ..\..\libs\libplatform.a(bt_alg.o)
+ .rodata        0x10063c34       0x48 ..\..\libs\libplatform.a(bt_pll.o)
+                0x10063c34                adpll_ajust_table
  .rodata.str1.4
-                0x10063c6c       0x4c ..\..\libs\libplatform.a(cm.o)
+                0x10063c7c       0x4c ..\..\libs\libplatform.a(cm.o)
  .rodata.str1.4
-                0x10063c6c        0xe ..\..\libs\libplatform.a(device.o)
+                0x10063c7c        0xe ..\..\libs\libplatform.a(device.o)
  .rodata.str1.4
-                0x10063c6c       0x1a ..\..\libs\libplatform.a(pacc.o)
+                0x10063c7c       0x1a ..\..\libs\libplatform.a(pacc.o)
  .rodata.str1.4
-                0x10063c6c      0x134 ..\..\libs\libplatform.a(pacc_effect.o)
+                0x10063c7c      0x134 ..\..\libs\libplatform.a(pacc_effect.o)
  .rodata.str1.4
-                0x10063c6c       0x12 ..\..\libs\libplatform.a(main.o)
+                0x10063c7c       0x12 ..\..\libs\libplatform.a(main.o)
  .rodata.str1.4
-                0x10063c6c       0x2e ..\..\libs\libplatform.a(music.o)
+                0x10063c7c       0x2e ..\..\libs\libplatform.a(music.o)
  .rodata.str1.4
-                0x10063c6c       0xab ..\..\libs\libplatform.a(startup.o)
+                0x10063c7c       0xab ..\..\libs\libplatform.a(startup.o)
  .rodata.str1.4
-                0x10063c6c        0xe ..\..\libs\libplatform.a(cfft_hw.o)
- .rodata.gpio   0x10063c6c       0x20 ..\..\libs\libplatform.a(gpio.o)
-                0x10063c6c                gpio_sfr
-                0x10063c7c                adc_gpio_tbl
- .rodata        0x10063c8c       0x58 ..\..\libs\libplatform.a(huart.o)
+                0x10063c7c        0xe ..\..\libs\libplatform.a(cfft_hw.o)
+ .rodata.gpio   0x10063c7c       0x20 ..\..\libs\libplatform.a(gpio.o)
+                0x10063c7c                gpio_sfr
+                0x10063c8c                adc_gpio_tbl
+ .rodata        0x10063c9c       0x58 ..\..\libs\libplatform.a(huart.o)
  .rodata.str1.4
-                0x10063ce4        0xf ..\..\libs\libplatform.a(pll.o)
+                0x10063cf4        0xf ..\..\libs\libplatform.a(pll.o)
  .rodata.str1.4
-                0x10063ce4        0xe ..\..\libs\libplatform.a(pmu.o)
+                0x10063cf4        0xe ..\..\libs\libplatform.a(pmu.o)
  .rodata.str1.4
-                0x10063ce4       0x72 ..\..\libs\libplatform.a(sys.o)
+                0x10063cf4       0x72 ..\..\libs\libplatform.a(sys.o)
  .rodata.str1.4
-                0x10063ce4       0x20 ..\..\libs\libplatform.a(sys_clk.o)
- .rodata        0x10063ce4        0xb ..\..\libs\libplatform.a(update.o)
+                0x10063cf4       0x20 ..\..\libs\libplatform.a(sys_clk.o)
+ .rodata        0x10063cf4        0xb ..\..\libs\libplatform.a(update.o)
  .rodata.str1.4
-                0x10063cef      0x179 ..\..\libs\libplatform.a(voltage_trim.o)
- *fill*         0x10063cef        0x1 
+                0x10063cff      0x179 ..\..\libs\libplatform.a(voltage_trim.o)
+ *fill*         0x10063cff        0x1 
  .rodata.volt_trim
-                0x10063cf0       0x40 ..\..\libs\libplatform.a(voltage_trim.o)
-                0x10063cf0                chg_icoef_tbl
+                0x10063d00       0x40 ..\..\libs\libplatform.a(voltage_trim.o)
+                0x10063d00                chg_icoef_tbl
  .rodata.str1.4
-                0x10063d30      0x191 ..\..\libs\libplatform.a(mic_aux.o)
- .rodata        0x10063d30       0x70 ..\..\libs\libplatform.a(mic_aux.o)
+                0x10063d40      0x191 ..\..\libs\libplatform.a(mic_aux.o)
+ .rodata        0x10063d40       0x70 ..\..\libs\libplatform.a(mic_aux.o)
  .rodata.str1.4
-                0x10063da0        0xe ..\..\libs\libplatform.a(bt_sbc.o)
+                0x10063db0        0xe ..\..\libs\libplatform.a(bt_sbc.o)
  .rodata.str1.4
-                0x10063da0       0x14 ..\..\libs\libbtstack.a(patch.o)
+                0x10063db0       0x14 ..\..\libs\libbtstack.a(patch.o)
  .rodata.str1.4
-                0x10063da0       0xd9 ..\..\libs\libbtstack.a(ll_cntl.o)
+                0x10063db0       0xd9 ..\..\libs\libbtstack.a(ll_cntl.o)
  .rodata.le.ll_cntl.tbl
-                0x10063da0      0x438 ..\..\libs\libbtstack.a(ll_cntl.o)
-                0x10063da0                ll_cntl_pdu_tbl_opt
-                0x10064190                ll_cntl_vs_pdu_tbl
+                0x10063db0      0x438 ..\..\libs\libbtstack.a(ll_cntl.o)
+                0x10063db0                ll_cntl_pdu_tbl_opt
+                0x100641a0                ll_cntl_vs_pdu_tbl
  .rodata.str1.4
-                0x100641d8       0x3d ..\..\libs\libbtstack.a(ll_chmap_upd.o)
+                0x100641e8       0x3d ..\..\libs\libbtstack.a(ll_chmap_upd.o)
  .rodata.str1.4
-                0x100641d8       0x7b ..\..\libs\libbtstack.a(ble_t2r_v6.o)
+                0x100641e8       0x7b ..\..\libs\libbtstack.a(ble_t2r_v6.o)
  .rodata.bb.tbl
-                0x100641d8        0xb ..\..\libs\libbtstack.a(ble_hal.o)
- *fill*         0x100641e3        0x1 
+                0x100641e8        0xb ..\..\libs\libbtstack.a(ble_hal.o)
+ *fill*         0x100641f3        0x1 
  .rodata.bb.tbl
-                0x100641e4        0x8 ..\..\libs\libbtstack.a(ble_con.o)
-                0x100641e4                connect_req_dur_tab
+                0x100641f4        0x8 ..\..\libs\libbtstack.a(ble_con.o)
+                0x100641f4                connect_req_dur_tab
  .rodata.str1.4
-                0x100641ec       0x4d ..\..\libs\libbtstack.a(ble_chan_scan.o)
+                0x100641fc       0x4d ..\..\libs\libbtstack.a(ble_chan_scan.o)
  .rodata.bb.tbl
-                0x100641ec       0x16 ..\..\libs\libbtstack.a(bb_utils.o)
-                0x100641ec                null_array
-                0x100641fc                dft_addr
- *fill*         0x10064202        0x2 
- .rodata        0x10064204       0x20 ..\..\libs\libbtstack.a(bb.o)
-                0x10064204                bb_hook
+                0x100641fc       0x16 ..\..\libs\libbtstack.a(bb_utils.o)
+                0x100641fc                null_array
+                0x1006420c                dft_addr
+ *fill*         0x10064212        0x2 
+ .rodata        0x10064214       0x20 ..\..\libs\libbtstack.a(bb.o)
+                0x10064214                bb_hook
  .rodata.func.outgoing.str1.4
-                0x10064224        0x6 ..\..\libs\libbtstack.a(extern_hfhs.o)
+                0x10064234        0x6 ..\..\libs\libbtstack.a(extern_hfhs.o)
  .rodata.bt_get_pin_code.str1.4
-                0x10064224        0x5 ..\..\libs\libbtstack.a(extern_bt.o)
- .rodata.l2cap  0x10064224        0x9 ..\..\libs\libbtstack.a(l2cap_test.o)
-                0x10064224                vs_test_actived_cmd
- *fill*         0x1006422d        0x3 
+                0x10064234        0x5 ..\..\libs\libbtstack.a(extern_bt.o)
+ .rodata.l2cap  0x10064234        0x9 ..\..\libs\libbtstack.a(l2cap_test.o)
+                0x10064234                vs_test_actived_cmd
+ *fill*         0x1006423d        0x3 
  .rodata.stack.l2cap
-                0x10064230       0x12 ..\..\libs\libbtstack.a(l2cap.o)
+                0x10064240       0x12 ..\..\libs\libbtstack.a(l2cap.o)
  .rodata.str1.4
-                0x10064242       0x94 ..\..\libs\libbtstack.a(hci_cmd.o)
- *fill*         0x10064242        0x2 
+                0x10064252       0x94 ..\..\libs\libbtstack.a(hci_cmd.o)
+ *fill*         0x10064252        0x2 
  .rodata.stack.hci_send
-                0x10064244      0x1b0 ..\..\libs\libbtstack.a(hci_cmd.o)
-                0x10064244                hci_le_long_term_key_negative_reply
-                0x1006424c                hci_le_long_term_key_request_reply
-                0x10064254                hci_le_rand
-                0x1006425c                hci_le_encrypt
-                0x10064264                hci_le_connection_update
-                0x1006426c                hci_le_set_advertise_enable
-                0x10064274                hci_le_set_scan_response_data
-                0x1006427c                hci_le_set_advertising_data
-                0x10064284                hci_le_set_advertising_parameters
-                0x1006428c                hci_le_set_random_address
-                0x10064294                hci_le_read_buffer_size
-                0x1006429c                hci_read_bd_addr
-                0x100642a4                hci_read_buffer_size
-                0x100642ac                hci_read_local_supported_features
-                0x100642b4                hci_read_local_supported_commands
-                0x100642bc                hci_write_le_host_supported
-                0x100642c4                hci_write_simple_pairing_mode
-                0x100642cc                hci_write_extended_inquiry_response
-                0x100642d4                hci_write_inquiry_mode
-                0x100642dc                hci_write_link_supervision_timeout
-                0x100642e4                hci_write_class_of_device
-                0x100642ec                hci_write_scan_enable
-                0x100642f4                hci_write_page_timeout
-                0x100642fc                hci_write_local_name
-                0x10064304                hci_reset
-                0x1006430c                hci_set_event_mask
-                0x10064314                hci_switch_role_command
-                0x1006431c                hci_role_discovery
-                0x10064324                hci_io_capability_request_negative_reply
-                0x1006432c                hci_user_passkey_request_negative_reply
-                0x10064334                hci_user_passkey_request_reply
-                0x1006433c                hci_user_confirmation_request_negative_reply
-                0x10064344                hci_user_confirmation_request_reply
-                0x1006434c                hci_io_capability_request_reply
-                0x10064354                hci_reject_synchronous_connection
-                0x1006435c                hci_accept_synchronous_connection
-                0x10064364                hci_setup_synchronous_connection
-                0x1006436c                hci_read_clock_offset_command
-                0x10064374                hci_read_remote_supported_features_command
-                0x1006437c                hci_remote_name_request_cancel
-                0x10064384                hci_remote_name_request
-                0x1006438c                hci_set_connection_encryption
-                0x10064394                hci_authentication_requested
-                0x1006439c                hci_pin_code_request_negative_reply
-                0x100643a4                hci_pin_code_request_reply
-                0x100643ac                hci_link_key_request_negative_reply
-                0x100643b4                hci_link_key_request_reply
-                0x100643bc                hci_reject_connection_request
-                0x100643c4                hci_accept_connection_request
-                0x100643cc                hci_create_connection_cancel
-                0x100643d4                hci_disconnect
-                0x100643dc                hci_create_connection
-                0x100643e4                hci_inquiry_cancel
-                0x100643ec                hci_inquiry
+                0x10064254      0x1b0 ..\..\libs\libbtstack.a(hci_cmd.o)
+                0x10064254                hci_le_long_term_key_negative_reply
+                0x1006425c                hci_le_long_term_key_request_reply
+                0x10064264                hci_le_rand
+                0x1006426c                hci_le_encrypt
+                0x10064274                hci_le_connection_update
+                0x1006427c                hci_le_set_advertise_enable
+                0x10064284                hci_le_set_scan_response_data
+                0x1006428c                hci_le_set_advertising_data
+                0x10064294                hci_le_set_advertising_parameters
+                0x1006429c                hci_le_set_random_address
+                0x100642a4                hci_le_read_buffer_size
+                0x100642ac                hci_read_bd_addr
+                0x100642b4                hci_read_buffer_size
+                0x100642bc                hci_read_local_supported_features
+                0x100642c4                hci_read_local_supported_commands
+                0x100642cc                hci_write_le_host_supported
+                0x100642d4                hci_write_simple_pairing_mode
+                0x100642dc                hci_write_extended_inquiry_response
+                0x100642e4                hci_write_inquiry_mode
+                0x100642ec                hci_write_link_supervision_timeout
+                0x100642f4                hci_write_class_of_device
+                0x100642fc                hci_write_scan_enable
+                0x10064304                hci_write_page_timeout
+                0x1006430c                hci_write_local_name
+                0x10064314                hci_reset
+                0x1006431c                hci_set_event_mask
+                0x10064324                hci_switch_role_command
+                0x1006432c                hci_role_discovery
+                0x10064334                hci_io_capability_request_negative_reply
+                0x1006433c                hci_user_passkey_request_negative_reply
+                0x10064344                hci_user_passkey_request_reply
+                0x1006434c                hci_user_confirmation_request_negative_reply
+                0x10064354                hci_user_confirmation_request_reply
+                0x1006435c                hci_io_capability_request_reply
+                0x10064364                hci_reject_synchronous_connection
+                0x1006436c                hci_accept_synchronous_connection
+                0x10064374                hci_setup_synchronous_connection
+                0x1006437c                hci_read_clock_offset_command
+                0x10064384                hci_read_remote_supported_features_command
+                0x1006438c                hci_remote_name_request_cancel
+                0x10064394                hci_remote_name_request
+                0x1006439c                hci_set_connection_encryption
+                0x100643a4                hci_authentication_requested
+                0x100643ac                hci_pin_code_request_negative_reply
+                0x100643b4                hci_pin_code_request_reply
+                0x100643bc                hci_link_key_request_negative_reply
+                0x100643c4                hci_link_key_request_reply
+                0x100643cc                hci_reject_connection_request
+                0x100643d4                hci_accept_connection_request
+                0x100643dc                hci_create_connection_cancel
+                0x100643e4                hci_disconnect
+                0x100643ec                hci_create_connection
+                0x100643f4                hci_inquiry_cancel
+                0x100643fc                hci_inquiry
  .rodata.packet_type_feature_packet_mask
-                0x100643f4        0xc ..\..\libs\libbtstack.a(hci.o)
+                0x10064404        0xc ..\..\libs\libbtstack.a(hci.o)
  .rodata.sdp_search_rfcomm_mfi
-                0x10064400        0xc ..\..\libs\libbtstack.a(spp.o)
+                0x10064410        0xc ..\..\libs\libbtstack.a(spp.o)
  .rodata.sdp_search_rfcomm_spp
-                0x1006440c        0xc ..\..\libs\libbtstack.a(spp.o)
+                0x1006441c        0xc ..\..\libs\libbtstack.a(spp.o)
  .rodata.stack.spp
-                0x10064418        0x2 ..\..\libs\libbtstack.a(spp.o)
- *fill*         0x1006441a        0x2 
+                0x10064428        0x2 ..\..\libs\libbtstack.a(spp.o)
+ *fill*         0x1006442a        0x2 
  .rodata.mfi_search_uuid128
-                0x1006441c       0x10 ..\..\libs\libbtstack.a(sdp_util.o)
-                0x1006441c                mfi_search_uuid128
+                0x1006442c       0x10 ..\..\libs\libbtstack.a(sdp_util.o)
+                0x1006442c                mfi_search_uuid128
  .rodata.sdp_client_packet_handler.str1.4
-                0x1006442c        0x8 ..\..\libs\libbtstack.a(sdp_client.o)
- .rodata        0x1006442c       0x17 ..\..\libs\libbtstack.a(sdp_client.o)
- *fill*         0x10064443        0x1 
+                0x1006443c        0x8 ..\..\libs\libbtstack.a(sdp_client.o)
+ .rodata        0x1006443c       0x17 ..\..\libs\libbtstack.a(sdp_client.o)
+ *fill*         0x10064453        0x1 
  .rodata.crc8table
-                0x10064444      0x100 ..\..\libs\libbtstack.a(rfcomm.o)
+                0x10064454      0x100 ..\..\libs\libbtstack.a(rfcomm.o)
  .rodata.hfp_hf_send_chld.isra.0.str1.4
-                0x10064544       0x11 ..\..\libs\libbtstack.a(hfp_hf.o)
+                0x10064554       0x11 ..\..\libs\libbtstack.a(hfp_hf.o)
  .rodata.hfp_hf_cmd_trigger_codec_connection_setup.isra.0.str1.4
-                0x10064544        0xe ..\..\libs\libbtstack.a(hfp_hf.o)
+                0x10064554        0xe ..\..\libs\libbtstack.a(hfp_hf.o)
  .rodata.hfp_hf_cmd_notify_on_codecs.isra.0.str1.4
-                0x10064544       0x12 ..\..\libs\libbtstack.a(hfp_hf.o)
+                0x10064554       0x12 ..\..\libs\libbtstack.a(hfp_hf.o)
  .rodata.hfp_run_for_context.str1.4
-                0x10064544       0xe2 ..\..\libs\libbtstack.a(hfp_hf.o)
+                0x10064554       0xe2 ..\..\libs\libbtstack.a(hfp_hf.o)
  .rodata.join.str1.4
-                0x10064544        0x7 ..\..\libs\libbtstack.a(hfp.o)
+                0x10064554        0x7 ..\..\libs\libbtstack.a(hfp.o)
  .rodata.hfp_link_settings
-                0x10064544       0x12 ..\..\libs\libbtstack.a(hfp.o)
- *fill*         0x10064556        0x2 
+                0x10064554       0x12 ..\..\libs\libbtstack.a(hfp.o)
+ *fill*         0x10064566        0x2 
  .rodata.sdp_search_rfcomm_hfp_hf
-                0x10064558        0xc ..\..\libs\libbtstack.a(hfp.o)
+                0x10064568        0xc ..\..\libs\libbtstack.a(hfp.o)
  .rodata.stack.link_key.str1.4
-                0x10064564       0x25 ..\..\libs\libbtstack.a(btstack_link_key_db.o)
+                0x10064574       0x25 ..\..\libs\libbtstack.a(btstack_link_key_db.o)
  .rodata.avdtp_media_codec_init.str1.4
-                0x10064564       0x1a ..\..\libs\libbtstack.a(avdtp.o)
+                0x10064574       0x1a ..\..\libs\libbtstack.a(avdtp.o)
  .rodata.avdtp_set_curr_media_codec.str1.4
-                0x10064564       0x1f ..\..\libs\libbtstack.a(avdtp.o)
+                0x10064574       0x1f ..\..\libs\libbtstack.a(avdtp.o)
  .rodata.avdtp_ready_to_play.part.0.str1.4
-                0x10064564       0x1a ..\..\libs\libbtstack.a(avdtp.o)
+                0x10064574       0x1a ..\..\libs\libbtstack.a(avdtp.o)
  .rodata.avdtp_end_of_play.str1.4
-                0x10064564       0x1d ..\..\libs\libbtstack.a(avdtp.o)
+                0x10064574       0x1d ..\..\libs\libbtstack.a(avdtp.o)
  .rodata.avdtp_packet_handler.str1.4
-                0x10064564       0x20 ..\..\libs\libbtstack.a(avdtp.o)
+                0x10064574       0x20 ..\..\libs\libbtstack.a(avdtp.o)
  .rodata.stack.avctp
-                0x10064564       0x18 ..\..\libs\libbtstack.a(avctp.o)
-                0x10064564                remote_capability_events
-                0x1006456a                local_capability_events_len
-                0x1006456c                local_capability_events
+                0x10064574       0x18 ..\..\libs\libbtstack.a(avctp.o)
+                0x10064574                remote_capability_events
+                0x1006457a                local_capability_events_len
+                0x1006457c                local_capability_events
  .rodata.a2dp_dec_reset.str1.4
-                0x1006457c       0x13 ..\..\libs\libbtstack.a(a2dp_play.o)
+                0x1006458c       0x13 ..\..\libs\libbtstack.a(a2dp_play.o)
  .rodata.nor_play_thres
-                0x1006457c       0x24 ..\..\libs\libbtstack.a(a2dp_play.o)
+                0x1006458c       0x24 ..\..\libs\libbtstack.a(a2dp_play.o)
  .rodata.stack.a2dp
-                0x100645a0       0x1c ..\..\libs\libbtstack.a(a2dp.o)
-                0x100645ac                a2dp_search_uuid16
+                0x100645b0       0x1c ..\..\libs\libbtstack.a(a2dp.o)
+                0x100645bc                a2dp_search_uuid16
  .rodata.bluetooth_base_uuid
-                0x100645bc       0x10 ..\..\libs\libbtstack.a(btstack_util.o)
-                0x100645bc                bluetooth_base_uuid
- .rodata        0x100645cc       0x10 ..\..\libs\libbtstack.a(btstack_util.o)
+                0x100645cc       0x10 ..\..\libs\libbtstack.a(btstack_util.o)
+                0x100645cc                bluetooth_base_uuid
+ .rodata        0x100645dc       0x10 ..\..\libs\libbtstack.a(btstack_util.o)
  .rodata.btstack_link_ctrl_abort_reconnect.str1.4
-                0x100645dc       0x1b ..\..\libs\libbtstack.a(btstack_link_ctrl.o)
+                0x100645ec       0x1b ..\..\libs\libbtstack.a(btstack_link_ctrl.o)
  .rodata.btstack_link_ctrl_reconnect_profile.str1.4
-                0x100645dc       0x11 ..\..\libs\libbtstack.a(btstack_link_ctrl.o)
+                0x100645ec       0x11 ..\..\libs\libbtstack.a(btstack_link_ctrl.o)
  .rodata.btstack_audio_bypass.str1.4
-                0x100645dc       0x16 ..\..\libs\libbtstack.a(btstack_api.o)
+                0x100645ec       0x16 ..\..\libs\libbtstack.a(btstack_api.o)
  .rodata.btstack_audio_enable.str1.4
-                0x100645dc       0x2b ..\..\libs\libbtstack.a(btstack_api.o)
+                0x100645ec       0x2b ..\..\libs\libbtstack.a(btstack_api.o)
  .rodata.btstack_connect_address.str1.4
-                0x100645dc        0x6 ..\..\libs\libbtstack.a(btstack_api.o)
+                0x100645ec        0x6 ..\..\libs\libbtstack.a(btstack_api.o)
  .rodata.btstack_sco_setup.str1.4
-                0x100645dc        0xf ..\..\libs\libbtstack.a(btstack_api.o)
+                0x100645ec        0xf ..\..\libs\libbtstack.a(btstack_api.o)
  .rodata.btstack_sco_kill.str1.4
-                0x100645dc        0xe ..\..\libs\libbtstack.a(btstack_api.o)
+                0x100645ec        0xe ..\..\libs\libbtstack.a(btstack_api.o)
  .rodata.stack.api
-                0x100645dc       0xb0 ..\..\libs\libbtstack.a(btstack_api.o)
-                0x100645dc                btstack_api_tbl
-                0x10064608                btstack_ctrl_tbl
-                0x10064658                btstack_ctl0_tbl
+                0x100645ec       0xb0 ..\..\libs\libbtstack.a(btstack_api.o)
+                0x100645ec                btstack_api_tbl
+                0x10064618                btstack_ctrl_tbl
+                0x10064668                btstack_ctl0_tbl
  .rodata.btstack_hfp_tbl
-                0x1006468c       0x3c ..\..\libs\libbtstack.a(btstack_api.o)
-                0x1006468c                btstack_hfp_tbl
+                0x1006469c       0x3c ..\..\libs\libbtstack.a(btstack_api.o)
+                0x1006469c                btstack_hfp_tbl
  .rodata.btstack_a2dp_tbl
-                0x100646c8       0x1c ..\..\libs\libbtstack.a(btstack_api.o)
-                0x100646c8                btstack_a2dp_tbl
+                0x100646d8       0x1c ..\..\libs\libbtstack.a(btstack_api.o)
+                0x100646d8                btstack_a2dp_tbl
  .rodata.stack.setup
-                0x100646e4       0x14 ..\..\libs\libbtstack.a(btstack_api.o)
+                0x100646f4       0x14 ..\..\libs\libbtstack.a(btstack_api.o)
  .rodata.stack.ble_api
-                0x100646f8       0x20 ..\..\libs\libbtstack.a(ble_api.o)
+                0x10064708       0x20 ..\..\libs\libbtstack.a(ble_api.o)
  .rodata.wl_status_setup.str1.4
-                0x10064718       0x17 ..\..\libs\libbtstack.a(wireless.o)
+                0x10064728       0x17 ..\..\libs\libbtstack.a(wireless.o)
  .rodata.btstack.wireless.str1.4
-                0x10064718       0x4a ..\..\libs\libbtstack.a(wireless.o)
- .rodata        0x10064718       0x2c ..\..\libs\libbtstack.a(bb_sche.o)
- .rodata        0x10064744       0x10 ..\..\libs\libbtstack.a(vs_proc.o)
+                0x10064728       0x4a ..\..\libs\libbtstack.a(wireless.o)
+ .rodata        0x10064728       0x2c ..\..\libs\libbtstack.a(bb_sche.o)
+ .rodata        0x10064754       0x10 ..\..\libs\libbtstack.a(vs_proc.o)
  .rodata.str1.4
-                0x10064754       0x2f ..\..\libs\libbtstack.a(lc_hook.o)
+                0x10064764       0x2f ..\..\libs\libbtstack.a(lc_hook.o)
  .rodata.str1.4
-                0x10064754       0x20 ..\..\libs\libbtstack.a(hct_tl.o)
+                0x10064764       0x20 ..\..\libs\libbtstack.a(hct_tl.o)
  .rodata.str1.4
-                0x10064754      0x20d ..\..\libs\libbtstack.a(hct_msg.o)
- .rodata        0x10064754      0x394 ..\..\libs\libbtstack.a(hct_msg.o)
-                0x10064754                hci_cmd_desc_root_tab
-                0x10064794                hci_evt_desc_tab
-                0x100648b4                hci_cmd_desc_tab_vs
-                0x100648b4                hci_evt_dbg_desc_tab
-                0x100648e4                hci_cmd_desc_tab_stat_par
-                0x100648e4                hci_cmd_desc_tab_testing
-                0x100648e4                hci_cmd_desc_tab_info_par
-                0x10064914                hci_cmd_desc_tab_ctrl_bb
-                0x100649a4                hci_cmd_desc_tab_lk_pol
-                0x100649bc                hci_cmd_desc_tab_lk_ctrl
- .rodata        0x10064ae8      0x1c8 ..\..\libs\libbtstack.a(lm_sp.o)
- .rodata        0x10064cb0      0x480 ..\..\libs\libbtstack.a(lm.o)
- .rodata        0x10065130       0x10 ..\..\libs\libbtstack.a(lc.o)
+                0x10064764      0x20d ..\..\libs\libbtstack.a(hct_msg.o)
+ .rodata        0x10064764      0x394 ..\..\libs\libbtstack.a(hct_msg.o)
+                0x10064764                hci_cmd_desc_root_tab
+                0x100647a4                hci_evt_desc_tab
+                0x100648c4                hci_cmd_desc_tab_vs
+                0x100648c4                hci_evt_dbg_desc_tab
+                0x100648f4                hci_cmd_desc_tab_stat_par
+                0x100648f4                hci_cmd_desc_tab_testing
+                0x100648f4                hci_cmd_desc_tab_info_par
+                0x10064924                hci_cmd_desc_tab_ctrl_bb
+                0x100649b4                hci_cmd_desc_tab_lk_pol
+                0x100649cc                hci_cmd_desc_tab_lk_ctrl
+ .rodata        0x10064af8      0x1c8 ..\..\libs\libbtstack.a(lm_sp.o)
+ .rodata        0x10064cc0      0x480 ..\..\libs\libbtstack.a(lm.o)
+ .rodata        0x10065140       0x10 ..\..\libs\libbtstack.a(lc.o)
  .rodata.bb.tbl
-                0x10065140       0x14 ..\..\libs\libbtstack.a(bt21.o)
-                0x10065140                bt_ctl
+                0x10065150       0x14 ..\..\libs\libbtstack.a(bt21.o)
+                0x10065150                bt_ctl
  .rodata.str1.4
-                0x10065154       0x78 ..\..\libs\libbtstack.a(mgr.o)
+                0x10065164       0x78 ..\..\libs\libbtstack.a(mgr.o)
  .rodata.str1.4
-                0x10065154       0xf4 ..\..\libs\libbtstack.a(ll_tbox_freq_cal.o)
+                0x10065164       0xf4 ..\..\libs\libbtstack.a(ll_tbox_freq_cal.o)
  .rodata.str1.4
-                0x10065154       0x10 ..\..\libs\libbtstack.a(ll_tbox_feature.o)
- .rodata        0x10065154       0x16 ..\..\libs\libbtstack.a(ll_tbox_feature.o)
- *fill*         0x1006516a        0x2 
+                0x10065164       0x10 ..\..\libs\libbtstack.a(ll_tbox_feature.o)
+ .rodata        0x10065164       0x16 ..\..\libs\libbtstack.a(ll_tbox_feature.o)
+ *fill*         0x1006517a        0x2 
  .rodata.le.ll_cntl.tbl
-                0x1006516c      0x100 ..\..\libs\libbtstack.a(ll_proc.o)
-                0x1006516c                ll_opt_hci_cmd_tbl
-                0x10065174                ll_opt_msg_tbl
+                0x1006517c      0x100 ..\..\libs\libbtstack.a(ll_proc.o)
+                0x1006517c                ll_opt_hci_cmd_tbl
+                0x10065184                ll_opt_msg_tbl
  .rodata.bb.tbl
-                0x1006526c       0x38 ..\..\libs\libbtstack.a(ble.o)
-                0x1006526c                ble_ctl
-                0x10065288                ble_ctl_test_mode
+                0x1006527c       0x38 ..\..\libs\libbtstack.a(ble.o)
+                0x1006527c                ble_ctl
+                0x10065298                ble_ctl_test_mode
  .rodata.str1.4
-                0x100652a4       0x2a ..\..\libs\libbtstack.a(l2cap_signaling.o)
+                0x100652b4       0x2a ..\..\libs\libbtstack.a(l2cap_signaling.o)
  .rodata.l2cap_signaling_commands_format
-                0x100652a4       0x58 ..\..\libs\libbtstack.a(l2cap_signaling.o)
+                0x100652b4       0x58 ..\..\libs\libbtstack.a(l2cap_signaling.o)
  .rodata.stack.api.wireless
-                0x100652fc       0x4c ..\..\libs\libbtstack.a(wl_api.o)
-                0x100652fc                btstack_wireless_tbl
+                0x1006530c       0x4c ..\..\libs\libbtstack.a(wl_api.o)
+                0x1006530c                btstack_wireless_tbl
  .rodata.hci_transport_dummy
-                0x10065348       0x20 ..\..\libs\libbtstack.a(hci_transport_dummy.o)
+                0x10065358       0x20 ..\..\libs\libbtstack.a(hci_transport_dummy.o)
  .rodata.str1.4
-                0x10065368        0x6 ..\..\libs\libbtstack.a(btstack_chipset_inner.o)
+                0x10065378        0x6 ..\..\libs\libbtstack.a(btstack_chipset_inner.o)
  .rodata.btstack_chipset_inner
-                0x10065368       0x14 ..\..\libs\libbtstack.a(btstack_chipset_inner.o)
- .rodata        0x1006537c      0x104 ..\..\libs\libbtstack.a(lm_proc.o)
+                0x10065378       0x14 ..\..\libs\libbtstack.a(btstack_chipset_inner.o)
+ .rodata        0x1006538c      0x104 ..\..\libs\libbtstack.a(lm_proc.o)
  .rodata.bb.tbl
-                0x10065480       0x1e ..\..\libs\libbtstack.a(lm_proc.o)
-                0x10065480                lm_local_supp_feats
- *fill*         0x1006549e        0x2 
- .rodata        0x100654a0      0x420 ..\..\libs\libbtstack.a(lm_key.o)
- .rodata        0x100658c0       0x40 ..\..\libs\libbtstack.a(lc_util.o)
- .rodata        0x10065900       0x15 ..\..\libs\libbtstack.a(lc_proc.o)
- *fill*         0x10065915        0x3 
+                0x10065490       0x1e ..\..\libs\libbtstack.a(lm_proc.o)
+                0x10065490                lm_local_supp_feats
+ *fill*         0x100654ae        0x2 
+ .rodata        0x100654b0      0x420 ..\..\libs\libbtstack.a(lm_key.o)
+ .rodata        0x100658d0       0x40 ..\..\libs\libbtstack.a(lc_util.o)
+ .rodata        0x10065910       0x15 ..\..\libs\libbtstack.a(lc_proc.o)
+ *fill*         0x10065925        0x3 
  .rodata.bb.chmap
-                0x10065918        0x6 ..\..\libs\libbtstack.a(lc_proc.o)
- *fill*         0x1006591e        0x2 
+                0x10065928        0x6 ..\..\libs\libbtstack.a(lc_proc.o)
+ *fill*         0x1006592e        0x2 
  .rodata.bt.lc_hci_cmd.tbl.weak
-                0x10065920      0x120 ..\..\libs\libbtstack.a(lc_proc.o)
-                0x10065920                lc_dut_hci_cmd_tbl
+                0x10065930      0x120 ..\..\libs\libbtstack.a(lc_proc.o)
+                0x10065930                lc_dut_hci_cmd_tbl
  .rodata.bt.lc_lmp_ext.tbl.weak
-                0x10065a40      0x108 ..\..\libs\libbtstack.a(lc_proc.o)
-                0x10065a40                lc_lmp_ext_dut_func_tab
+                0x10065a50      0x108 ..\..\libs\libbtstack.a(lc_proc.o)
+                0x10065a50                lc_lmp_ext_dut_func_tab
  .rodata.bt.lc_lmp_func.tbl.weak
-                0x10065b48      0x290 ..\..\libs\libbtstack.a(lc_proc.o)
-                0x10065b48                lc_lmp_dut_func_tab
+                0x10065b58      0x290 ..\..\libs\libbtstack.a(lc_proc.o)
+                0x10065b58                lc_lmp_dut_func_tab
  .rodata.bt.lc_msg.tbl.weak
-                0x10065dd8      0x248 ..\..\libs\libbtstack.a(lc_proc.o)
-                0x10065dd8                lc_dut_msg_tbl
+                0x10065de8      0x248 ..\..\libs\libbtstack.a(lc_proc.o)
+                0x10065de8                lc_dut_msg_tbl
  .rodata.str1.4
-                0x10066020       0xa4 ..\..\libs\libbtstack.a(lc_lmppdu.o)
- .rodata        0x10066020      0x270 ..\..\libs\libbtstack.a(lc_lmppdu.o)
- .rodata        0x10066290       0x60 ..\..\libs\libbtstack.a(mgr_proc.o)
+                0x10066030       0xa4 ..\..\libs\libbtstack.a(lc_lmppdu.o)
+ .rodata        0x10066030      0x270 ..\..\libs\libbtstack.a(lc_lmppdu.o)
+ .rodata        0x100662a0       0x60 ..\..\libs\libbtstack.a(mgr_proc.o)
  .rodata.le.mgr_cntl.tbl
-                0x100662f0       0x30 ..\..\libs\libbtstack.a(mgr_hci.o)
-                0x100662f0                mgr_opt_hci_cmd_tbl
+                0x10066300       0x30 ..\..\libs\libbtstack.a(mgr_hci.o)
+                0x10066300                mgr_opt_hci_cmd_tbl
  .rodata.str1.4
-                0x10066320       0x1e ..\..\libs\libcodecs.a(lc3s_enc.o)
+                0x10066330       0x1e ..\..\libs\libcodecs.a(lc3s_enc.o)
  .rodata.str1.4
-                0x10066320       0x32 ..\..\libs\libcodecs.a(lc3s_dec.o)
+                0x10066330       0x32 ..\..\libs\libcodecs.a(lc3s_dec.o)
  .rodata.str1.4
-                0x10066320       0xdb ..\..\libs\libcodecs.a(lc3_api.o)
+                0x10066330       0xdb ..\..\libs\libcodecs.a(lc3_api.o)
  .rodata.epsize.table
-                0x10066320        0x7 ..\..\libs\libdrivers.a(usb_comm.o)
-                0x10066320                epsize_tbl
- *fill*         0x10066327        0x1 
- .rodata.uda    0x10066328       0x1a ..\..\libs\libdrivers.a(usb_device_table.o)
-                0x10066328                desc_range_spk_spl_tbl
+                0x10066330        0x7 ..\..\libs\libdrivers.a(usb_comm.o)
+                0x10066330                epsize_tbl
+ *fill*         0x10066337        0x1 
+ .rodata.uda    0x10066338       0x1a ..\..\libs\libdrivers.a(usb_device_table.o)
+                0x10066338                desc_range_spk_spl_tbl
  .rodata.str1.4
-                0x10066342      0x228 ..\..\libs\libvoices.a(npu.o)
- *fill*         0x10066342        0x2 
- .rodata        0x10066344       0x2d ..\..\libs\libvoices.a(npu.o)
- *fill*         0x10066371        0x3 
- .rodata        0x10066374     0x4ee0 ..\..\libs\libvoices.a(ylcrn_L3_weights.o)
-                0x10066374                h6889ea9467_502743c4e6f1_6d54c09c6a48f41b_0x00015
-                0x10066474                h6889ea9467_502743c4e6f1_7bab12bb0b592454_0x00012
-                0x100664b4                h6889ea9467_502743c4e6f1_c554c65cba3412a6_0x00013
-                0x100667b4                h6889ea9467_502743c4e6f1_ae7495ef8a94e793_0x00009
-                0x100667c4                h6889ea9467_502743c4e6f1_2869c1ae10077448_0x0000a
-                0x10066844                h6889ea9467_502743c4e6f1_cc7e8d6c595e735c_0x0000c
-                0x100668a4                h6889ea9467_502743c4e6f1_a6cc3aa5afe1cf26_0x0000d
-                0x10066904                h6889ea9467_502743c4e6f1_3976025d75ef6228_0x0000f
-                0x10066910                h6889ea9467_502743c4e6f1_ba5cac4296bd1fa5_0x0000e
-                0x10066c10                h6889ea9467_502743c4e6f1_c8e1b98931f2402c_0x00011
-                0x10066c1c                h6889ea9467_502743c4e6f1_ba627634995bf47b_0x00010
-                0x10066d9c                h6889ea9467_502743c4e6f1_0f369e4585fcc0bc_0x00007
-                0x10066dbc                h6889ea9467_502743c4e6f1_7aceb7adac7218c2_0x00008
-                0x10066ebc                h6889ea9467_502743c4e6f1_bd75ed1bd54db4d3_0x00003
-                0x10066efc                h6889ea9467_502743c4e6f1_58ace2979f3c19e4_0x00004
-                0x100670fc                h6889ea9467_502743c4e6f1_c37fc1ffa2c0bf7c_0x00005
-                0x1006713c                h6889ea9467_502743c4e6f1_706402c3a40f2d42_0x00006
-                0x1006743c                h6889ea9467_502743c4e6f1_3f08f9a504631dd0_0x00039
-                0x1006763c                h6889ea9467_502743c4e6f1_6aaf033ef827e8df_0x0003b
-                0x1006783c                h6889ea9467_502743c4e6f1_c1afe58ffa64ffd9_0x00036
-                0x1006785c                h6889ea9467_502743c4e6f1_00ea1f48611c2a46_0x00037
-                0x1006795c                h6889ea9467_502743c4e6f1_948fd4604958626b_0x0003d
-                0x100679bc                h6889ea9467_502743c4e6f1_1cee23c95b2affb4_0x0003e
-                0x10067a1c                h6889ea9467_502743c4e6f1_ab53e3d7abe0ee93_0x00040
-                0x10067a28                h6889ea9467_502743c4e6f1_a35ab969f15fa8f0_0x0003f
-                0x10067d28                h6889ea9467_502743c4e6f1_d04574e8f7bd80b9_0x00042
-                0x10067d34                h6889ea9467_502743c4e6f1_cd808ff641fac404_0x00041
-                0x10068034                h6889ea9467_502743c4e6f1_ff8ce072e90050cd_0x00046
-                0x10068234                h6889ea9467_502743c4e6f1_9d94f4bc0b7c3a05_0x00048
-                0x10068434                h6889ea9467_502743c4e6f1_53b2abd9fdc847f4_0x00043
-                0x10068454                h6889ea9467_502743c4e6f1_87f4b36eb38aa53e_0x00044
-                0x10068554                h6889ea9467_502743c4e6f1_9a6da61074c8f9e0_0x0004b
-                0x10068584                h6889ea9467_502743c4e6f1_1b009db9c8de93f1_0x0004d
-                0x100685b4                h6889ea9467_502743c4e6f1_b2dcc9ef2804fbd6_0x00050
-                0x100685c0                h6889ea9467_502743c4e6f1_eb4c223c72488a59_0x0004f
-                0x10068680                h6889ea9467_502743c4e6f1_79bcbd465b7b2433_0x00054
-                0x1006868c                h6889ea9467_502743c4e6f1_2a71d212b6e72d80_0x00053
-                0x1006880c                h6889ea9467_502743c4e6f1_2370df3e54c739c1_0x0004a
-                0x1006883c                h6889ea9467_502743c4e6f1_254b0b6c88f095dc_0x0004c
-                0x1006886c                h6889ea9467_502743c4e6f1_1148607af821dde4_0x00051
-                0x10068878                h6889ea9467_502743c4e6f1_e34754e0ae8d4768_0x0004e
-                0x10068938                h6889ea9467_502743c4e6f1_54f2032f682e377a_0x00055
-                0x10068944                h6889ea9467_502743c4e6f1_b98e346161ca6ac2_0x00052
-                0x10068ac4                h6889ea9467_502743c4e6f1_dfef29c79389d5d1_0x00019
-                0x10068cc4                h6889ea9467_502743c4e6f1_96ab292a891b1bcd_0x0001b
-                0x10068ec4                h6889ea9467_502743c4e6f1_7ea7a063bb34881f_0x00016
-                0x10068ee4                h6889ea9467_502743c4e6f1_7270c0268ba2a0b2_0x00017
-                0x10068fe4                h6889ea9467_502743c4e6f1_36e3791ffee65f18_0x0001d
-                0x10069044                h6889ea9467_502743c4e6f1_f09847002b03778e_0x0001e
-                0x100690a4                h6889ea9467_502743c4e6f1_b8f64cd6ef0b0982_0x00020
-                0x100690b0                h6889ea9467_502743c4e6f1_fbbffe590201b2e5_0x0001f
-                0x100693b0                h6889ea9467_502743c4e6f1_b989c5e4dad66302_0x00022
-                0x100693bc                h6889ea9467_502743c4e6f1_774abef3e3af3730_0x00021
-                0x100696bc                h6889ea9467_502743c4e6f1_f2f845c37b3db460_0x00026
-                0x100698bc                h6889ea9467_502743c4e6f1_7e9c46c0d819699c_0x00028
-                0x10069abc                h6889ea9467_502743c4e6f1_a087351640f4b58c_0x00023
-                0x10069adc                h6889ea9467_502743c4e6f1_0c3dd365a6ea20fa_0x00024
-                0x10069bdc                h6889ea9467_502743c4e6f1_189c55477152d685_0x0002b
-                0x10069c0c                h6889ea9467_502743c4e6f1_eddf91db6238b4d0_0x0002d
-                0x10069c3c                h6889ea9467_502743c4e6f1_ce9a233448ff3321_0x00030
-                0x10069c48                h6889ea9467_502743c4e6f1_eb01ebbeadde9602_0x0002f
-                0x10069d08                h6889ea9467_502743c4e6f1_85f5df446a063c67_0x00034
-                0x10069d14                h6889ea9467_502743c4e6f1_aced3823e58973a6_0x00033
-                0x10069e94                h6889ea9467_502743c4e6f1_6e01615458ea834a_0x0002a
-                0x10069ec4                h6889ea9467_502743c4e6f1_8d8aa7e12007bb39_0x0002c
-                0x10069ef4                h6889ea9467_502743c4e6f1_cb2ca8c67c80e396_0x00031
-                0x10069f00                h6889ea9467_502743c4e6f1_4beca92d9fb9234b_0x0002e
-                0x10069fc0                h6889ea9467_502743c4e6f1_0642486e17f26e68_0x00035
-                0x10069fcc                h6889ea9467_502743c4e6f1_beb3bb6a18dcdb10_0x00032
-                0x1006a14c                h6889ea9467_502743c4e6f1_3a9cceabb87e43aa_0x00060
-                0x1006a15c                h6889ea9467_502743c4e6f1_1509627e593f7b16_0x00061
-                0x1006a1dc                h6889ea9467_502743c4e6f1_79d031d7e67de7c0_0x00063
-                0x1006a23c                h6889ea9467_502743c4e6f1_7b157c622c96ed6c_0x00064
-                0x1006a29c                h6889ea9467_502743c4e6f1_a86da3117f49cbbc_0x00066
-                0x1006a2a8                h6889ea9467_502743c4e6f1_790a3d4378ba13bc_0x00065
-                0x1006a5a8                h6889ea9467_502743c4e6f1_96610ccd998f9e0f_0x00068
-                0x1006a5b4                h6889ea9467_502743c4e6f1_0817a255622bcd0b_0x00067
-                0x1006a734                h6889ea9467_502743c4e6f1_4cb464c431fecb35_0x0005e
-                0x1006a754                h6889ea9467_502743c4e6f1_5111caf9efb3b5d9_0x0005f
-                0x1006a854                h6889ea9467_502743c4e6f1_4a1efde165a80396_0x0005a
-                0x1006a894                h6889ea9467_502743c4e6f1_f36330603132f9aa_0x0005b
-                0x1006aa94                h6889ea9467_502743c4e6f1_124cabf9dff9bc8e_0x0005c
-                0x1006aad4                h6889ea9467_502743c4e6f1_1a486a20bcc74ec5_0x0005d
-                0x1006add4                h6889ea9467_502743c4e6f1_4b214651f58c8cbb_0x00058
-                0x1006ae14                h6889ea9467_502743c4e6f1_c77d79b8fd57428b_0x00059
-                0x1006b114                h6889ea9467_502743c4e6f1_a093d206bcc0c700_0x00056
-                0x1006b154                h6889ea9467_502743c4e6f1_f3981482652a9c30_0x00057
-                0x1006b1b4                h6889ea9467_502743c4e6f1_f76d589b905aeddd_0x00001
-                0x1006b234                h6889ea9467_502743c4e6f1_0d3c8e2eb84c407c_0x00002
+                0x10066352      0x228 ..\..\libs\libvoices.a(npu.o)
+ *fill*         0x10066352        0x2 
+ .rodata        0x10066354       0x2d ..\..\libs\libvoices.a(npu.o)
+ *fill*         0x10066381        0x3 
+ .rodata        0x10066384     0x4ee0 ..\..\libs\libvoices.a(ylcrn_L3_weights.o)
+                0x10066384                h6889ea9467_502743c4e6f1_6d54c09c6a48f41b_0x00015
+                0x10066484                h6889ea9467_502743c4e6f1_7bab12bb0b592454_0x00012
+                0x100664c4                h6889ea9467_502743c4e6f1_c554c65cba3412a6_0x00013
+                0x100667c4                h6889ea9467_502743c4e6f1_ae7495ef8a94e793_0x00009
+                0x100667d4                h6889ea9467_502743c4e6f1_2869c1ae10077448_0x0000a
+                0x10066854                h6889ea9467_502743c4e6f1_cc7e8d6c595e735c_0x0000c
+                0x100668b4                h6889ea9467_502743c4e6f1_a6cc3aa5afe1cf26_0x0000d
+                0x10066914                h6889ea9467_502743c4e6f1_3976025d75ef6228_0x0000f
+                0x10066920                h6889ea9467_502743c4e6f1_ba5cac4296bd1fa5_0x0000e
+                0x10066c20                h6889ea9467_502743c4e6f1_c8e1b98931f2402c_0x00011
+                0x10066c2c                h6889ea9467_502743c4e6f1_ba627634995bf47b_0x00010
+                0x10066dac                h6889ea9467_502743c4e6f1_0f369e4585fcc0bc_0x00007
+                0x10066dcc                h6889ea9467_502743c4e6f1_7aceb7adac7218c2_0x00008
+                0x10066ecc                h6889ea9467_502743c4e6f1_bd75ed1bd54db4d3_0x00003
+                0x10066f0c                h6889ea9467_502743c4e6f1_58ace2979f3c19e4_0x00004
+                0x1006710c                h6889ea9467_502743c4e6f1_c37fc1ffa2c0bf7c_0x00005
+                0x1006714c                h6889ea9467_502743c4e6f1_706402c3a40f2d42_0x00006
+                0x1006744c                h6889ea9467_502743c4e6f1_3f08f9a504631dd0_0x00039
+                0x1006764c                h6889ea9467_502743c4e6f1_6aaf033ef827e8df_0x0003b
+                0x1006784c                h6889ea9467_502743c4e6f1_c1afe58ffa64ffd9_0x00036
+                0x1006786c                h6889ea9467_502743c4e6f1_00ea1f48611c2a46_0x00037
+                0x1006796c                h6889ea9467_502743c4e6f1_948fd4604958626b_0x0003d
+                0x100679cc                h6889ea9467_502743c4e6f1_1cee23c95b2affb4_0x0003e
+                0x10067a2c                h6889ea9467_502743c4e6f1_ab53e3d7abe0ee93_0x00040
+                0x10067a38                h6889ea9467_502743c4e6f1_a35ab969f15fa8f0_0x0003f
+                0x10067d38                h6889ea9467_502743c4e6f1_d04574e8f7bd80b9_0x00042
+                0x10067d44                h6889ea9467_502743c4e6f1_cd808ff641fac404_0x00041
+                0x10068044                h6889ea9467_502743c4e6f1_ff8ce072e90050cd_0x00046
+                0x10068244                h6889ea9467_502743c4e6f1_9d94f4bc0b7c3a05_0x00048
+                0x10068444                h6889ea9467_502743c4e6f1_53b2abd9fdc847f4_0x00043
+                0x10068464                h6889ea9467_502743c4e6f1_87f4b36eb38aa53e_0x00044
+                0x10068564                h6889ea9467_502743c4e6f1_9a6da61074c8f9e0_0x0004b
+                0x10068594                h6889ea9467_502743c4e6f1_1b009db9c8de93f1_0x0004d
+                0x100685c4                h6889ea9467_502743c4e6f1_b2dcc9ef2804fbd6_0x00050
+                0x100685d0                h6889ea9467_502743c4e6f1_eb4c223c72488a59_0x0004f
+                0x10068690                h6889ea9467_502743c4e6f1_79bcbd465b7b2433_0x00054
+                0x1006869c                h6889ea9467_502743c4e6f1_2a71d212b6e72d80_0x00053
+                0x1006881c                h6889ea9467_502743c4e6f1_2370df3e54c739c1_0x0004a
+                0x1006884c                h6889ea9467_502743c4e6f1_254b0b6c88f095dc_0x0004c
+                0x1006887c                h6889ea9467_502743c4e6f1_1148607af821dde4_0x00051
+                0x10068888                h6889ea9467_502743c4e6f1_e34754e0ae8d4768_0x0004e
+                0x10068948                h6889ea9467_502743c4e6f1_54f2032f682e377a_0x00055
+                0x10068954                h6889ea9467_502743c4e6f1_b98e346161ca6ac2_0x00052
+                0x10068ad4                h6889ea9467_502743c4e6f1_dfef29c79389d5d1_0x00019
+                0x10068cd4                h6889ea9467_502743c4e6f1_96ab292a891b1bcd_0x0001b
+                0x10068ed4                h6889ea9467_502743c4e6f1_7ea7a063bb34881f_0x00016
+                0x10068ef4                h6889ea9467_502743c4e6f1_7270c0268ba2a0b2_0x00017
+                0x10068ff4                h6889ea9467_502743c4e6f1_36e3791ffee65f18_0x0001d
+                0x10069054                h6889ea9467_502743c4e6f1_f09847002b03778e_0x0001e
+                0x100690b4                h6889ea9467_502743c4e6f1_b8f64cd6ef0b0982_0x00020
+                0x100690c0                h6889ea9467_502743c4e6f1_fbbffe590201b2e5_0x0001f
+                0x100693c0                h6889ea9467_502743c4e6f1_b989c5e4dad66302_0x00022
+                0x100693cc                h6889ea9467_502743c4e6f1_774abef3e3af3730_0x00021
+                0x100696cc                h6889ea9467_502743c4e6f1_f2f845c37b3db460_0x00026
+                0x100698cc                h6889ea9467_502743c4e6f1_7e9c46c0d819699c_0x00028
+                0x10069acc                h6889ea9467_502743c4e6f1_a087351640f4b58c_0x00023
+                0x10069aec                h6889ea9467_502743c4e6f1_0c3dd365a6ea20fa_0x00024
+                0x10069bec                h6889ea9467_502743c4e6f1_189c55477152d685_0x0002b
+                0x10069c1c                h6889ea9467_502743c4e6f1_eddf91db6238b4d0_0x0002d
+                0x10069c4c                h6889ea9467_502743c4e6f1_ce9a233448ff3321_0x00030
+                0x10069c58                h6889ea9467_502743c4e6f1_eb01ebbeadde9602_0x0002f
+                0x10069d18                h6889ea9467_502743c4e6f1_85f5df446a063c67_0x00034
+                0x10069d24                h6889ea9467_502743c4e6f1_aced3823e58973a6_0x00033
+                0x10069ea4                h6889ea9467_502743c4e6f1_6e01615458ea834a_0x0002a
+                0x10069ed4                h6889ea9467_502743c4e6f1_8d8aa7e12007bb39_0x0002c
+                0x10069f04                h6889ea9467_502743c4e6f1_cb2ca8c67c80e396_0x00031
+                0x10069f10                h6889ea9467_502743c4e6f1_4beca92d9fb9234b_0x0002e
+                0x10069fd0                h6889ea9467_502743c4e6f1_0642486e17f26e68_0x00035
+                0x10069fdc                h6889ea9467_502743c4e6f1_beb3bb6a18dcdb10_0x00032
+                0x1006a15c                h6889ea9467_502743c4e6f1_3a9cceabb87e43aa_0x00060
+                0x1006a16c                h6889ea9467_502743c4e6f1_1509627e593f7b16_0x00061
+                0x1006a1ec                h6889ea9467_502743c4e6f1_79d031d7e67de7c0_0x00063
+                0x1006a24c                h6889ea9467_502743c4e6f1_7b157c622c96ed6c_0x00064
+                0x1006a2ac                h6889ea9467_502743c4e6f1_a86da3117f49cbbc_0x00066
+                0x1006a2b8                h6889ea9467_502743c4e6f1_790a3d4378ba13bc_0x00065
+                0x1006a5b8                h6889ea9467_502743c4e6f1_96610ccd998f9e0f_0x00068
+                0x1006a5c4                h6889ea9467_502743c4e6f1_0817a255622bcd0b_0x00067
+                0x1006a744                h6889ea9467_502743c4e6f1_4cb464c431fecb35_0x0005e
+                0x1006a764                h6889ea9467_502743c4e6f1_5111caf9efb3b5d9_0x0005f
+                0x1006a864                h6889ea9467_502743c4e6f1_4a1efde165a80396_0x0005a
+                0x1006a8a4                h6889ea9467_502743c4e6f1_f36330603132f9aa_0x0005b
+                0x1006aaa4                h6889ea9467_502743c4e6f1_124cabf9dff9bc8e_0x0005c
+                0x1006aae4                h6889ea9467_502743c4e6f1_1a486a20bcc74ec5_0x0005d
+                0x1006ade4                h6889ea9467_502743c4e6f1_4b214651f58c8cbb_0x00058
+                0x1006ae24                h6889ea9467_502743c4e6f1_c77d79b8fd57428b_0x00059
+                0x1006b124                h6889ea9467_502743c4e6f1_a093d206bcc0c700_0x00056
+                0x1006b164                h6889ea9467_502743c4e6f1_f3981482652a9c30_0x00057
+                0x1006b1c4                h6889ea9467_502743c4e6f1_f76d589b905aeddd_0x00001
+                0x1006b244                h6889ea9467_502743c4e6f1_0d3c8e2eb84c407c_0x00002
  *(.srodata*)
- .srodata       0x1006b254        0x8 Output\obj\functions\func_bt.o
- .srodata       0x1006b25c       0x20 Output\obj\libs\strong_tws.o
-                0x1006b25c                lc_msg_tbl
-                0x1006b264                lc_hci_cmd_tbl
-                0x1006b26c                lc_lmp_ext_func_tab
-                0x1006b274                lc_lmp_func_tab
- .srodata       0x1006b27c        0x1 Output\obj\modules\bluetooth\bt\a2dp.o
-                0x1006b27c                cfg_bt_a2dp_media_discard
- *fill*         0x1006b27d        0x3 
- .srodata       0x1006b280       0x12 Output\obj\modules\bluetooth\bt\bt.o
-                0x1006b280                bt_local_addr
-                0x1006b288                bt_local_name
-                0x1006b28f                cfg_bt_spp_rfcomm_server_ch2
-                0x1006b290                cfg_bt_spp_rfcomm_server_ch1
-                0x1006b291                cfg_bt_spp_rfcomm_server_ch0
- *fill*         0x1006b292        0x2 
- .srodata       0x1006b294       0x10 Output\obj\modules\usb_device\usb_audio.o
- .srodata       0x1006b2a4        0x8 Output\obj\modules\usb_device\usb_enum.o
-                0x1006b2a4                ude_supplier
- *fill*         0x1006b2ac        0x4 
- .srodata.cst8  0x1006b2b0       0x10 Output\obj\projects\microphone\main.o
- .srodata       0x1006b2c0        0x1 Output\obj\projects\microphone\plugin\effect_table.o
-                0x1006b2c0                eq_effect_idx_tbl
- *fill*         0x1006b2c1        0x1 
- .srodata       0x1006b2c2        0x2 ..\..\libs\libplatform.a(main.o)
-                0x1006b2c2                libs_version
- .srodata.cst4  0x1006b2c4       0x1c ..\..\libs\libplatform.a(printf_float.o)
- .srodata       0x1006b2e0        0x6 ..\..\libs\libplatform.a(rf_joy.o)
+ .srodata       0x1006b264        0x8 Output\obj\functions\func_bt.o
+ .srodata       0x1006b26c       0x20 Output\obj\libs\strong_tws.o
+                0x1006b26c                lc_msg_tbl
+                0x1006b274                lc_hci_cmd_tbl
+                0x1006b27c                lc_lmp_ext_func_tab
+                0x1006b284                lc_lmp_func_tab
+ .srodata       0x1006b28c        0x1 Output\obj\modules\bluetooth\bt\a2dp.o
+                0x1006b28c                cfg_bt_a2dp_media_discard
+ *fill*         0x1006b28d        0x3 
+ .srodata       0x1006b290       0x12 Output\obj\modules\bluetooth\bt\bt.o
+                0x1006b290                bt_local_addr
+                0x1006b298                bt_local_name
+                0x1006b29f                cfg_bt_spp_rfcomm_server_ch2
+                0x1006b2a0                cfg_bt_spp_rfcomm_server_ch1
+                0x1006b2a1                cfg_bt_spp_rfcomm_server_ch0
+ *fill*         0x1006b2a2        0x2 
+ .srodata       0x1006b2a4       0x10 Output\obj\modules\usb_device\usb_audio.o
+ .srodata       0x1006b2b4        0x8 Output\obj\modules\usb_device\usb_enum.o
+                0x1006b2b4                ude_supplier
+ *fill*         0x1006b2bc        0x4 
+ .srodata.cst8  0x1006b2c0       0x10 Output\obj\projects\microphone\main.o
+ .srodata       0x1006b2d0        0x1 Output\obj\projects\microphone\plugin\effect_table.o
+                0x1006b2d0                eq_effect_idx_tbl
+ *fill*         0x1006b2d1        0x1 
+ .srodata       0x1006b2d2        0x2 ..\..\libs\libplatform.a(main.o)
+                0x1006b2d2                libs_version
+ .srodata.cst4  0x1006b2d4       0x1c ..\..\libs\libplatform.a(printf_float.o)
+ .srodata       0x1006b2f0        0x6 ..\..\libs\libplatform.a(rf_joy.o)
  .srodata.cfg_bt_link_info_items
-                0x1006b2e6        0x1 ..\..\libs\libbtstack.a(extern_bt.o)
-                0x1006b2e6                cfg_bt_link_info_items
+                0x1006b2f6        0x1 ..\..\libs\libbtstack.a(extern_bt.o)
+                0x1006b2f6                cfg_bt_link_info_items
  .srodata.cfg_bt_sw_ver_build
-                0x1006b2e7        0x1 ..\..\libs\libbtstack.a(extern_bt.o)
-                0x1006b2e7                cfg_bt_sw_ver_build
+                0x1006b2f7        0x1 ..\..\libs\libbtstack.a(extern_bt.o)
+                0x1006b2f7                cfg_bt_sw_ver_build
  .srodata.cfg_bt_sw_ver_major
-                0x1006b2e8        0x1 ..\..\libs\libbtstack.a(extern_bt.o)
-                0x1006b2e8                cfg_bt_sw_ver_major
+                0x1006b2f8        0x1 ..\..\libs\libbtstack.a(extern_bt.o)
+                0x1006b2f8                cfg_bt_sw_ver_major
  .srodata.cfg_bb_bt_opt
-                0x1006b2e9        0x1 ..\..\libs\libbtstack.a(extern_bt.o)
-                0x1006b2e9                cfg_bb_bt_opt
- *fill*         0x1006b2ea        0x2 
- .srodata.packet_type_feature_requirement_bit
-                0x1006b2ec        0x6 ..\..\libs\libbtstack.a(hci.o)
- *fill*         0x1006b2f2        0x2 
- .srodata.hfp_hf_search_uuid16
-                0x1006b2f4        0x2 ..\..\libs\libbtstack.a(hfp.o)
- *fill*         0x1006b2f6        0x2 
- .srodata.avrcp_control_target_search_uuid16
-                0x1006b2f8        0x2 ..\..\libs\libbtstack.a(avctp.o)
-                0x1006b2f8                avrcp_control_target_search_uuid16
+                0x1006b2f9        0x1 ..\..\libs\libbtstack.a(extern_bt.o)
+                0x1006b2f9                cfg_bb_bt_opt
  *fill*         0x1006b2fa        0x2 
- .srodata       0x1006b2fc        0x8 ..\..\libs\libbtstack.a(vs_proc.o)
- .srodata       0x1006b304       0x18 ..\..\libs\libbtstack.a(hct.o)
- .srodata       0x1006b31c       0x10 ..\..\libs\libbtstack.a(mgr.o)
+ .srodata.packet_type_feature_requirement_bit
+                0x1006b2fc        0x6 ..\..\libs\libbtstack.a(hci.o)
+ *fill*         0x1006b302        0x2 
+ .srodata.hfp_hf_search_uuid16
+                0x1006b304        0x2 ..\..\libs\libbtstack.a(hfp.o)
+ *fill*         0x1006b306        0x2 
+ .srodata.avrcp_control_target_search_uuid16
+                0x1006b308        0x2 ..\..\libs\libbtstack.a(avctp.o)
+                0x1006b308                avrcp_control_target_search_uuid16
+ *fill*         0x1006b30a        0x2 
+ .srodata       0x1006b30c        0x8 ..\..\libs\libbtstack.a(vs_proc.o)
+ .srodata       0x1006b314       0x18 ..\..\libs\libbtstack.a(hct.o)
+ .srodata       0x1006b32c       0x10 ..\..\libs\libbtstack.a(mgr.o)
  .srodata.cfg_a2dp_sbc_max_bitpool
-                0x1006b32c        0x1 ..\..\libs\libbtstack.a(extern_a2dp.o)
-                0x1006b32c                cfg_a2dp_sbc_max_bitpool
- *fill*         0x1006b32d        0x3 
- .srodata       0x1006b330        0x8 ..\..\libs\libdrivers.a(usb_device_audio.o)
- .srodata       0x1006b338       0x3c ..\..\libs\libvoices.a(ylcrn_L3_weights.o)
-                0x1006b338                h6889ea9467_502743c4e6f1_042d7f12f837229a_0x00014
-                0x1006b33c                h6889ea9467_502743c4e6f1_d6c6e18137781ede_0x0000b
-                0x1006b340                h6889ea9467_502743c4e6f1_e3308318fffe32c0_0x0003a
-                0x1006b344                h6889ea9467_502743c4e6f1_ebd5431da14c5a05_0x0003c
-                0x1006b348                h6889ea9467_502743c4e6f1_a4a2125fb252bab9_0x00038
-                0x1006b34c                h6889ea9467_502743c4e6f1_2640238bf8eb300d_0x00047
-                0x1006b350                h6889ea9467_502743c4e6f1_3b2d3aa6ed6c5fa7_0x00049
-                0x1006b354                h6889ea9467_502743c4e6f1_1ae1992efa9fb3d8_0x00045
-                0x1006b358                h6889ea9467_502743c4e6f1_95e374ba64b50232_0x0001a
-                0x1006b35c                h6889ea9467_502743c4e6f1_53bf826e309016bd_0x0001c
-                0x1006b360                h6889ea9467_502743c4e6f1_66373e4cb68489b2_0x00018
-                0x1006b364                h6889ea9467_502743c4e6f1_f9360bd07449acc5_0x00027
-                0x1006b368                h6889ea9467_502743c4e6f1_a8356924e91bd1a1_0x00029
-                0x1006b36c                h6889ea9467_502743c4e6f1_2cc3508e8219e6c9_0x00025
-                0x1006b370                h6889ea9467_502743c4e6f1_0708950cf2dd1e2f_0x00062
+                0x1006b33c        0x1 ..\..\libs\libbtstack.a(extern_a2dp.o)
+                0x1006b33c                cfg_a2dp_sbc_max_bitpool
+ *fill*         0x1006b33d        0x3 
+ .srodata       0x1006b340        0x8 ..\..\libs\libdrivers.a(usb_device_audio.o)
+ .srodata       0x1006b348       0x3c ..\..\libs\libvoices.a(ylcrn_L3_weights.o)
+                0x1006b348                h6889ea9467_502743c4e6f1_042d7f12f837229a_0x00014
+                0x1006b34c                h6889ea9467_502743c4e6f1_d6c6e18137781ede_0x0000b
+                0x1006b350                h6889ea9467_502743c4e6f1_e3308318fffe32c0_0x0003a
+                0x1006b354                h6889ea9467_502743c4e6f1_ebd5431da14c5a05_0x0003c
+                0x1006b358                h6889ea9467_502743c4e6f1_a4a2125fb252bab9_0x00038
+                0x1006b35c                h6889ea9467_502743c4e6f1_2640238bf8eb300d_0x00047
+                0x1006b360                h6889ea9467_502743c4e6f1_3b2d3aa6ed6c5fa7_0x00049
+                0x1006b364                h6889ea9467_502743c4e6f1_1ae1992efa9fb3d8_0x00045
+                0x1006b368                h6889ea9467_502743c4e6f1_95e374ba64b50232_0x0001a
+                0x1006b36c                h6889ea9467_502743c4e6f1_53bf826e309016bd_0x0001c
+                0x1006b370                h6889ea9467_502743c4e6f1_66373e4cb68489b2_0x00018
+                0x1006b374                h6889ea9467_502743c4e6f1_f9360bd07449acc5_0x00027
+                0x1006b378                h6889ea9467_502743c4e6f1_a8356924e91bd1a1_0x00029
+                0x1006b37c                h6889ea9467_502743c4e6f1_2cc3508e8219e6c9_0x00025
+                0x1006b380                h6889ea9467_502743c4e6f1_0708950cf2dd1e2f_0x00062
  *(.rela*)
  .rela.text.func
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.func.bt_dut
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.bt_get_master_addr
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.spp_txpkt_init
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.local_mic_eq_effect_update_callback
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.local_mic_drc_effect_update_callback
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.mix_mic_eq_effect_update_callback
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.mix_mic_drc_effect_update_callback
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.wireless.init
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.wireless_cmd
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.wireless.cb
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.adapter.wl_rx
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.load_code_wl_adapter
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.load_code_wl_device
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.rodata.lock.str
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.btdec.tws.fifo
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.com_text.tick1.sync
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.platform_main
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.music.init
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.timer0_init
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.usb_irq_init
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.startup.init
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
- .rela.reset    0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
- .rela.vector   0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
+ .rela.reset    0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
+ .rela.vector   0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.update
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
- .rela.text     0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
+ .rela.text     0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.ble.t2r.wl_tick0
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.ble.t2r.wl_tick.d2a
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.ble.t2r_v6
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.com_text.ret.bb.isr
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.sleep_text.bb
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.l2cap_test_cmd
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.stack.handler.event
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.com_text.stack.spp.event_send
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.handle_query_rfcomm_event
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.spp_init
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.stack.setup
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.avdtp_get_capabilities_rsp
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.avdtp_setconf_cmd
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.avdtp_packet_handler
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.avrtp_get_capability_bit
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.avrtp_get_capability_event
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.avrtp_get_capability_allbit
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.avrcp_parse_rsp
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.avctp_packet_handler
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.a2dp_nor_reset
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.a2dp_sbc_codec_setconf_verify
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.btstack_clr_l2cap_status
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.rodata.stack.api
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.rodata.btstack_hfp_tbl
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.rodata.btstack_a2dp_tbl
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.btstack.wireless.rx
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.wl_status_change
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.wl_status_setup
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.btstack.wireless
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.bb.wl.pscan
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.bb.wl.page
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.btstack_wireless_adv_set_param
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.btstack_wireless_scan_set_enable
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.btstack_wireless_scan_set_param
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.btstack_wireless_adv_set_enable
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.btstack_wireless_api
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.com_rodata.bb.tbl.weak
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
- .rela.rodata   0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
+ .rela.rodata   0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.text.aviobuf
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
  .rela.usbdev.com
-                0x1006b374        0x0 Output\obj\bsp\bsp_huart.o
-                0x1006b374        0x4 LONG 0x0
+                0x1006b384        0x0 Output\obj\bsp\bsp_huart.o
+                0x1006b384        0x4 LONG 0x0
                 0x1006b400                        . = ALIGN (0x200)
- *fill*         0x1006b378       0x88 
+ *fill*         0x1006b388       0x78 
 
 usbdev.com.rodata
                 0x1006b400       0x38
