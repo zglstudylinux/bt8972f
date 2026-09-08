@@ -62,9 +62,9 @@ if (UART2CON & BIT(9)) {
 - 每次主循环只在 `UART2CON BIT(9)` 置位时读取一次 DATA，然后清 BIT9。
 - 不按数据值去重，`0x00`、`0xFF` 和连续重复字节均作为合法数据入队。
 - 128 字节软件环形缓冲在满时丢弃新字节，并累加 `rx_overflow_count`，不覆盖未读数据。
-- 正常模式下 `bsp_uart2_com_process()` 不消费队列；业务通过 `bsp_uart2_com_get()` 取数。
-- `UART2_COM_RX_TEST_EN=1` 时启用二进制原样回显，便于主机逐字节比对。回显采用非阻塞状态机，每次主循环最多提交一个待发字节，UART2 不输出启动文本、十六进制文本或心跳。
-- 诊断信息只通过 UART0 输出，包括接收数、BIT9 命中数、软件溢出数、回显发送数及关键寄存器快照。
+- 正常模式下 `bsp_uart2_com_process()` 不消费 RX 队列；业务通过 `bsp_uart2_com_get()` 取数。
+- `UART2_COM_RX_TEST_EN=1` 时启用二进制原样回显，便于主机逐字节比对。回显先把 RX 数据转入独立 TX 队列，再由非阻塞 TX 状态机逐字节发送；UART2 不输出启动文本、十六进制文本或心跳。
+- 测试模式的诊断信息只通过 UART0 输出，包括接收数、BIT9 命中数、软件溢出数、TX 入队/完成/溢出数及关键寄存器快照。
 
 UART2 当前选择 24 MHz XOSC，BAUD 分频据此计算，不依赖系统主频恰好也是 24 MHz。
 
@@ -79,12 +79,13 @@ UART2 当前选择 24 MHz XOSC，BAUD 分频据此计算，不依赖系统主频
 配置位于 `projects/microphone/config.h`：
 
 ```c
-#define UART2_COM_EN          1
-#define UART2_COM_BAUD        115200
-#define UART2_COM_RX_TEST_EN  1
+#define UART2_COM_EN              1
+#define UART2_COM_BAUD            115200
+#define UART2_COM_RX_TEST_EN      0
+#define UART2_COM_RX_IRQ_TEST_EN  0
 ```
 
-当前驱动沿用原厂 UART1 初始化中的 `BIT(4)`，按该源码注释使用 **8N2**（8 数据位、无校验、2 停止位）；`test-uart2.ps1` 已使用相同格式。BIT4 的 UART2 精确语义仍应由原厂寄存器资料确认。
+正常业务配置保持两个测试宏为 0。做二进制回显板测时临时将 `UART2_COM_RX_TEST_EN` 改为 1；只有复现实验性 IRQ14 时才将 `UART2_COM_RX_IRQ_TEST_EN` 改为 1。
 
 UART0/PB3 仍为 SDK 调试输出口，波特率 1.5 Mbps。UART0 和 UART2 应分别连接，避免把 UART0 日志混入 UART2 二进制测试数据。
 
@@ -183,7 +184,7 @@ powershell -ExecutionPolicy Bypass -NoProfile -File .\test-uart2.ps1 `
 - `00..FF`、10 ms 字节间隔：256/256 通过；
 - `00..FF`、脚本 1 ms 间隔：256/256 通过；
 - 无间隔 128/129/255/256/257 字节：分别收到 86/90/176/177/178 字节，失败；
-- UART0 诊断中 `rx_byte_count == rx_pending_count`，`rx_overflow_count == 0`，`tx_timeout_count == 0`。
+- UART0 诊断中 `rx_byte_count == rx_pending_count`，`rx_overflow_count == 0`，旧版 `tx_timeout_count == 0`。
 
 这组结果证明：
 
@@ -192,11 +193,11 @@ powershell -ExecutionPolicy Bypass -NoProfile -File .\test-uart2.ps1 `
 3. 软件环形缓冲没有溢出；
 4. 第一版测试回显在收到字节后阻塞等待 TX 完成，显著拉长了 RX 轮询间隔，是无间隔突发丢包的直接软件瓶颈。
 
-随后把测试回显改为非阻塞状态机并重新烧录复测。特殊字节、10 ms 和 1 ms 用例仍全部通过；无间隔 128/129/255/256/257 字节分别收到 93/93/180/184/184 字节。UART0 同时显示 `rx_byte_count == rx_pending_count == tx_byte_count` 且 `rx_overflow_count == 0`。与阻塞版相比仅小幅改善，说明主要瓶颈已不是回显等待，而是主循环轮询无法在每个 115200 bps 字符到达时及时读取单字节接收寄存器。
+随后把测试回显改为非阻塞状态机并重新烧录复测。特殊字节、10 ms 和 1 ms 用例仍全部通过；无间隔 128/129/255/256/257 字节分别收到 93/93/180/184/184 字节。UART0 同时显示 `rx_byte_count == rx_pending_count`、`rx_overflow_count == 0`，且旧版 `tx_byte_count` 与 RX 数相等。与阻塞版相比仅小幅改善，说明主要瓶颈已不是回显等待，而是主循环轮询无法在每个 115200 bps 字符到达时及时读取单字节接收寄存器。
 
 进一步反汇编 `libplatform.a` 后确认：`uart1_register_isr()` 会先置 `UART1CON BIT(2)`，再把回调直接注册到 IRQ14；SDK 没有 UART2 注册 API，也没有二级 UART 分发表。当前工程 UART1 功能宏为开启状态，因此不能直接用仅处理 UART2 的 ISR 覆盖 IRQ14。
 
-实验性共享 IRQ14 版本也已完成实板测试：启动稳定，`UART2CON=0x011100f5`，每个收到的字节均使 `irq`、`pending` 和 `rx` 同步递增，证明 `UART2CON BIT(2)` 确实能使 UART2 通过 IRQ14 进入回调。但无间隔 128/129/255/256/257 字节仅收到 70/70/137/140/136 字节，比非阻塞轮询更差；`overflow=0` 且 `rx == pending == irq == tx`。这表明 UART2 的接收数据寄存器不具备足以吸收连续流的 FIFO，或者同优先级/关中断区导致 IRQ 响应超过字符周期。IRQ 本身无法恢复已经被覆盖的字节。
+实验性共享 IRQ14 版本也已完成实板测试：启动稳定，`UART2CON=0x011100f5`，每个收到的字节均使 `irq`、`pending` 和 `rx` 同步递增，证明 `UART2CON BIT(2)` 确实能使 UART2 通过 IRQ14 进入回调。但无间隔 128/129/255/256/257 字节仅收到 70/70/137/140/136 字节，比非阻塞轮询更差；`rx_overflow_count=0`，且旧版统计中 `rx == pending == irq == tx`。这表明软件只观察到这些 RX 完成事件；可能是接收寄存器在响应前被后续字节覆盖，或存在同优先级/关中断区等时延，缺少 UART2 FIFO 文档时不能进一步定性。IRQ 本身无法恢复软件未观察到的字节。
 
 因此默认将 `UART2_COM_RX_IRQ_TEST_EN` 设回 0，保留已验证更好的轮询实现。实验代码仅用于记录和后续原厂确认，不能作为当前产品方案。
 

@@ -2,21 +2,28 @@
 
 #if UART2_COM_EN
 
-#define UART2_COM_BUF_SIZE              128
-#define UART2_COM_BUF_MASK              (UART2_COM_BUF_SIZE - 1)
+#define UART2_COM_RX_BUF_SIZE           128
+#define UART2_COM_RX_BUF_MASK           (UART2_COM_RX_BUF_SIZE - 1)
+#define UART2_COM_TX_BUF_SIZE           128
+#define UART2_COM_TX_BUF_MASK           (UART2_COM_TX_BUF_SIZE - 1)
 #define UART2_XOSC_HZ                   24000000UL
 
 #define TX2MAP_PE7                      (1 << 8)
 #define RX2MAP_PB1                      (2 << 12)
 
 typedef struct {
-    volatile u16 w_cnt;
-    volatile u16 r_cnt;
-    u8 *buf;
+    volatile u16 rx_w_cnt;
+    volatile u16 rx_r_cnt;
+    volatile u16 tx_w_cnt;
+    volatile u16 tx_r_cnt;
+    u8 *rx_buf;
+    u8 *tx_buf;
+    u8 tx_busy;
 } uart2_com_cb_t;
 
 static uart2_com_cb_t uart2_com_cb;
-static u8 uart2_com_rx_buf[UART2_COM_BUF_SIZE];
+static u8 uart2_com_rx_buf[UART2_COM_RX_BUF_SIZE];
+static u8 uart2_com_tx_buf[UART2_COM_TX_BUF_SIZE];
 static uart2_com_stats_t uart2_com_stats;
 
 static void uart2_com_rx_push(u8 data);
@@ -41,47 +48,65 @@ static u8 uart2_rx_read(void)
 AT(.com_text.uart2.com)
 static void uart2_com_irq(void)
 {
+    u8 received;
+
 #if UART1_EN
     bsp_uart1_irq_process();
 #endif
-    uart2_com_stats.rx_irq_count++;
-    uart2_rx_read();
+    received = uart2_rx_read();
+    if (received) {
+        uart2_com_stats.rx_irq_count++;
+    }
 }
 #endif
 
 #if UART2_COM_RX_TEST_EN
-static u8 uart2_com_tx_busy;
-
 AT(.com_text.uart2.com)
 static void uart2_com_echo_process(void)
 {
     u8 ch;
 
-    if (uart2_com_tx_busy && !(UART2CON & BIT(8))) {
-        return;
+    while (uart2_com_cb.rx_r_cnt != uart2_com_cb.rx_w_cnt) {
+        if ((u16)(uart2_com_cb.tx_w_cnt - uart2_com_cb.tx_r_cnt) >= UART2_COM_TX_BUF_SIZE) {
+            break;
+        }
+        bsp_uart2_com_get(&ch);
+        bsp_uart2_com_put(ch);
     }
-    if (!bsp_uart2_com_get(&ch)) {
-        uart2_com_tx_busy = 0;
-        return;
-    }
-
-    UART2DATA = ch;
-    uart2_com_tx_busy = 1;
-    uart2_com_stats.tx_byte_count++;
 }
 #endif
 
 AT(.com_text.uart2.com)
 static void uart2_com_rx_push(u8 data)
 {
-    if ((u16)(uart2_com_cb.w_cnt - uart2_com_cb.r_cnt) >= UART2_COM_BUF_SIZE) {
+    if ((u16)(uart2_com_cb.rx_w_cnt - uart2_com_cb.rx_r_cnt) >= UART2_COM_RX_BUF_SIZE) {
         uart2_com_stats.rx_overflow_count++;
         return;
     }
 
-    uart2_com_cb.buf[uart2_com_cb.w_cnt & UART2_COM_BUF_MASK] = data;
-    uart2_com_cb.w_cnt++;
+    uart2_com_cb.rx_buf[uart2_com_cb.rx_w_cnt & UART2_COM_RX_BUF_MASK] = data;
+    uart2_com_cb.rx_w_cnt++;
     uart2_com_stats.rx_byte_count++;
+}
+
+AT(.com_text.uart2.com)
+static void uart2_com_tx_process(void)
+{
+    if (uart2_com_cb.tx_busy) {
+        if (!(UART2CON & BIT(8))) {
+            return;
+        }
+        uart2_com_cb.tx_busy = 0;
+        uart2_com_stats.tx_complete_count++;
+    }
+
+    if (uart2_com_cb.tx_r_cnt == uart2_com_cb.tx_w_cnt) {
+        return;
+    }
+
+    UART2DATA = uart2_com_cb.tx_buf[uart2_com_cb.tx_r_cnt & UART2_COM_TX_BUF_MASK];
+    uart2_com_cb.tx_r_cnt++;
+    uart2_com_cb.tx_busy = 1;
 }
 
 AT(.com_text.uart2.com)
@@ -98,9 +123,15 @@ void bsp_uart2_com_init(u32 baudrate)
 {
     u32 baud;
 
+    if ((baudrate == 0) || (baudrate > UART2_XOSC_HZ)) {
+        printf("uart2 invalid baud=%d\n", (int)baudrate);
+        return;
+    }
+
     memset(&uart2_com_cb, 0, sizeof(uart2_com_cb));
     memset(&uart2_com_stats, 0, sizeof(uart2_com_stats));
-    uart2_com_cb.buf = uart2_com_rx_buf;
+    uart2_com_cb.rx_buf = uart2_com_rx_buf;
+    uart2_com_cb.tx_buf = uart2_com_tx_buf;
 
     GPIOEDE  |= BIT(7);
     GPIOEPU  |= BIT(7);
@@ -141,13 +172,47 @@ void bsp_uart2_com_init(u32 baudrate)
 AT(.com_text.uart2.com)
 u8 bsp_uart2_com_get(u8 *ch)
 {
-    if (uart2_com_cb.r_cnt == uart2_com_cb.w_cnt) {
+    if (uart2_com_cb.rx_r_cnt == uart2_com_cb.rx_w_cnt) {
         return 0;
     }
 
-    *ch = uart2_com_cb.buf[uart2_com_cb.r_cnt & UART2_COM_BUF_MASK];
-    uart2_com_cb.r_cnt++;
+    *ch = uart2_com_cb.rx_buf[uart2_com_cb.rx_r_cnt & UART2_COM_RX_BUF_MASK];
+    uart2_com_cb.rx_r_cnt++;
     return 1;
+}
+
+AT(.com_text.uart2.com)
+u8 bsp_uart2_com_put(u8 ch)
+{
+    if ((u16)(uart2_com_cb.tx_w_cnt - uart2_com_cb.tx_r_cnt) >= UART2_COM_TX_BUF_SIZE) {
+        uart2_com_stats.tx_overflow_count++;
+        return 0;
+    }
+
+    uart2_com_cb.tx_buf[uart2_com_cb.tx_w_cnt & UART2_COM_TX_BUF_MASK] = ch;
+    uart2_com_cb.tx_w_cnt++;
+    uart2_com_stats.tx_queued_count++;
+    return 1;
+}
+
+u16 bsp_uart2_com_write(const u8 *buf, u16 len)
+{
+    u16 written = 0;
+
+    while ((written < len) && bsp_uart2_com_put(buf[written])) {
+        written++;
+    }
+    return written;
+}
+
+u8 bsp_uart2_com_tx_idle(void)
+{
+    if (uart2_com_cb.tx_busy && (UART2CON & BIT(8))) {
+        uart2_com_cb.tx_busy = 0;
+        uart2_com_stats.tx_complete_count++;
+    }
+    return !uart2_com_cb.tx_busy &&
+           (uart2_com_cb.tx_r_cnt == uart2_com_cb.tx_w_cnt);
 }
 
 void bsp_uart2_com_get_stats(uart2_com_stats_t *stats)
@@ -168,18 +233,23 @@ void bsp_uart2_com_process(void)
 
 #if UART2_COM_RX_TEST_EN
     uart2_com_echo_process();
+#endif
+    uart2_com_tx_process();
 
+#if UART2_COM_RX_TEST_EN
     {
         static u32 diag_tick;
 
         if (tick_check_expire(diag_tick, 2000)) {
             diag_tick = tick_get();
-            printf("[uart2] rx=%d pending=%d irq=%d overflow=%d tx=%d con=%08x cpnd=%08x baud=%08x mux=%08x\n",
+            printf("[uart2] rx=%d pending=%d irq=%d rx_ovf=%d tx_q=%d tx_done=%d tx_ovf=%d con=%08x cpnd=%08x baud=%08x mux=%08x\n",
                    (int)uart2_com_stats.rx_byte_count,
                    (int)uart2_com_stats.rx_pending_count,
                    (int)uart2_com_stats.rx_irq_count,
                    (int)uart2_com_stats.rx_overflow_count,
-                   (int)uart2_com_stats.tx_byte_count,
+                   (int)uart2_com_stats.tx_queued_count,
+                   (int)uart2_com_stats.tx_complete_count,
+                   (int)uart2_com_stats.tx_overflow_count,
                    UART2CON, UART2CPND, UART2BAUD, FUNCMCON2);
         }
     }
