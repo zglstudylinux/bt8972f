@@ -4,3 +4,7 @@ app/projects/*/Output/obj/
 # 临时文件
 *.log
 *.tmp
+
+# 个人/会话文件
+.zcode/
+*.layout

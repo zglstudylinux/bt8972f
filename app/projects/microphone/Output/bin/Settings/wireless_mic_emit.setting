@@ -36,7 +36,7 @@
         <add key="sys_init_vol_perc" value="100" />
         <add key="sys_recover_initvol_perc" value="15" />
         <add key="warning_volume_perc" value="65" />
-        <add key="buck_mode_en" value="True" />
+        <add key="buck_mode_en" value="False" />
         <add key="vcore_buck_en" value="False" />
         <add key="vddbt_capless_en" value="False" />
         <add key="vddio_sel" value="7" />
@@ -255,5 +255,9 @@
         <add key="mic_anl_gain" value="0" />
         <add key="bt_mic_dig_gain" value="10" />
         <add key="sd_record_en" value="False" />
+        <add key="huart_audio_out_en" value="False" />
+        <add key="huart_out_sel" value="0" />
+        <add key="huart_audio_in_en" value="False" />
+        <add key="huart_in_sel" value="0" />
     </appSettings>
 </configuration>

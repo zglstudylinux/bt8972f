@@ -5,6 +5,7 @@
 #include "bsp_timer.h"
 #include "bsp_huart.h"
 #include "bsp_uart.h"
+#include "bsp_uart2_com.h"
 #include "bsp_saradc.h"
 #include "bsp_port_int.h"
 #include "bsp_spi.h"

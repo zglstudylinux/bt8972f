@@ -1,0 +1,83 @@
+emit, state: 3
+emit, state: 2
+emit, con_sta(0): 0
+emit, scan_en
+emit, state: 5
+emit, state: 3
+[uart2] hb=219 rx=0
+emit, state: 2
+emit, con_sta(0): 0
+emit, scan_en
+emit, state: 5
+emit, state: 3
+emit, state: 2
+emit, con_sta(0): 0
+emit, scan_en
+emit, state: 5
+emit, state: 3
+emit, state: 2
+emit, con_sta(0): 0
+emit, scan_en
+emit, state: 5
+[uart2] hb=220 rx=0
+emit, state: 3
+emit, state: 2
+emit, con_sta(0): 0
+emit, scan_en
+emit, state: 5
+emit, state: 3
+[uart2] hb=221 rx=0
+emit, state: 2
+emit, con_sta(0): 0
+emit, scan_en
+emit, state: 5
+emit, state: 3
+emit, state: 2
+emit, con_sta(0): 0
+emit, scan_en
+emit, state: 5
+emit, state: 3
+emit, state: 2
+emit, con_sta(0): 0
+emit, scan_en
+emit, state: 5
+[uart2] hb=222 rx=0
+emit, state: 3
+emit, state: 2
+emit, con_sta(0): 0
+emit, scan_en
+emit, state: 5
+emit, state: 3
+emit, state: 2
+emit, con_sta(0): 0
+emit, scan_en
+emit, state: 5
+[uart2] hb=223 rx=0
+emit, state: 3
+emit, state: 2
+emit, con_sta(0): 0
+emit, scan_en
+emit, state: 5
+emit, state: 3
+emit, state: 2
+emit, con_sta(0): 0
+emit, scan_en
+emit, state: 5
+[uart2] hb=224 rx=0
+emit, state: 3
+emit, state: 2
+emit, con_sta(0): 0
+emit, scan_en
+emit, state: 5
+emit, state: 3
+emit, state: 2
+emit, con_sta(0): 0
+emit, scan_en
+emit, state: 5
+[uart2] hb=225 rx=0
+emit, state: 3
+emit, state: 2
+emit, con_sta(0): 0
+emit, scan_en
+emit, state: 5
+emit, state: 3
