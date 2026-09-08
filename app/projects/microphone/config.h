@@ -34,8 +34,10 @@
 #define USB_SD_UPDATE_EN                0                       //是否支持UDISK/SD的离线升级
 #define GUI_SELECT                      GUI_NO                  //GUI Display Select
 #define UART0_PRINTF_SEL                PRINTF_PB3              //选择UART打印信息输出IO，或关闭打印信息输出（uart0为调试专用口，1.5M固定）
-#define UART2_COM_EN                    1                       //使能UART2普通串口测试口(TX=PE7,RX=PB1)，见手册5.6.4
-#define UART2_COM_BAUD                  115200                  //UART2(TX=PE7)波特率，实测无码上限24M，逐档修改此处(改完重跑build.ps1再烧录)
+#define UART2_COM_EN                    1                       //使能UART2普通串口(TX=PE7,RX=PB1)，见手册5.6.4
+#define UART2_COM_BAUD                  115200                  //UART2波特率，当前时钟源为24MHz XOSC
+#define UART2_COM_RX_TEST_EN            1                       //RX板测模式：UART2原样回显，诊断只输出到UART0
+#define UART2_COM_RX_IRQ_TEST_EN        0                       //实验性共享IRQ14；实测无间隔流更差，默认禁用
 #define PWRON_ENTER_BTMODE_EN           0                       //是否上电默认进蓝牙模式
 #define SLEEP_DAC_OFF_EN                (is_sleep_dac_off_enable()) //sfunc_sleep是否关闭DAC， 复用MICL检测方案不能关DAC。
 #define SYS_VDDIO_LP_EN                 1                       //休眠模式是否打开切换VDDIO功能（省电，可能会影响VDDIO供电的外设）

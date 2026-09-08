@@ -22,6 +22,7 @@ enum {
 
 extern const u8 vusb_crc8_tbl[256];
 void bsp_uart1_init(u32 baudrate);
+void bsp_uart1_irq_process(void);
 void bsp_vusb_uart_dis(void);
 u8 bsp_uart1_get(u8 *ch);
 u8 bsp_uart_packet_parse(vh_packet_t *p, u8 data);

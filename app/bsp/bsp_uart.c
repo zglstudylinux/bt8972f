@@ -105,6 +105,12 @@ static void uart1_isr(void)
     }
 }
 
+AT(.com_text.uart1.isr)
+void bsp_uart1_irq_process(void)
+{
+    uart1_isr();
+}
+
 AT(.com_text.uart)
 u8 bsp_uart1_get(u8 *ch)
 {
