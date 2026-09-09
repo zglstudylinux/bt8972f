@@ -3,9 +3,9 @@
     验证 BT897x UART2 二进制 RX/TX 回显。
 
 .EXAMPLE
-    .\test-uart2.ps1 -Port COM7
-    .\test-uart2.ps1 -Port COM7 -BaudRate 115200 -Case slow-special
-    .\test-uart2.ps1 -ListPorts
+    .\tests\test-uart2.ps1 -Port COM7
+    .\tests\test-uart2.ps1 -Port COM7 -BaudRate 115200 -Case slow-special
+    .\tests\test-uart2.ps1 -ListPorts
 #>
 [CmdletBinding()]
 param(

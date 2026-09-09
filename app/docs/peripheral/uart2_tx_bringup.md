@@ -175,12 +175,12 @@ powershell -ExecutionPolicy Bypass -NoProfile -File .\build.ps1 -Rebuild
 
 ## 7. 与 RX 的关系
 
-当前 `UART2_COM_RX_TEST_EN=0`，业务 RX 队列不会被测试回显消费。需要回显验证时临时改为 1，重新构建和烧录，然后使用 `test-uart2.ps1`。
+当前 `UART2_COM_RX_TEST_EN=0`，业务 RX 队列不会被测试回显消费。需要回显验证时临时改为 1，重新构建和烧录，然后使用 `tests\test-uart2.ps1`。
 
-独立 TX 测试使用 `UART2_COM_TX_TEST_EN=1`。固件每 100 ms 发送一个 72 字节二进制帧：`55 AA 5A A5` 同步头、16 位递增序号、64 字节确定性 payload，以及 CRC-16/MODBUS。主机使用以下命令连续校验帧长度、序号、payload 和 CRC：
+独立 TX 测试使用 `UART2_COM_TX_TEST_EN=1`。固件每 100 ms 发送一个 72 字节二进制帧：`55 AA 5A A5` 同步头、16 位递增序号、64 字节确定性 payload，以及 CRC-16/MODBUS。主机使用以下命令连续校验帧长度、序号、payload 和 CRC（脚本位于 `projects/microphone/tests/`）：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -NoProfile -File .\test-uart2-tx.ps1 `
+powershell -ExecutionPolicy Bypass -NoProfile -File .\tests\test-uart2-tx.ps1 `
   -Port COM17 -BaudRate 115200 -FrameCount 100
 ```
 
@@ -194,7 +194,7 @@ powershell -ExecutionPolicy Bypass -NoProfile -File .\test-uart2-tx.ps1 `
 - UART0 debug：PB3 → COM9；
 - 串口格式：115200 bps、8N2；
 - 固件每 100 ms 发送一个 72 字节测试帧；
-- 主机命令：`test-uart2-tx.ps1 -Port COM17 -BaudRate 115200 -FrameCount 100 -TimeoutMs 20000`。
+- 主机命令：`tests\test-uart2-tx.ps1 -Port COM17 -BaudRate 115200 -FrameCount 100 -TimeoutMs 20000`。
 
 主机校验结果：
 
@@ -227,7 +227,7 @@ FUNCMCON2 = 0x00002100
 
 ### CH340 边界实测（2026-09-09，COM17）：2M 通过、3M 超规格丢帧（已修正旧结论）
 
-2M（CH340 官方规格上限）实测：`UART2_COM_BAUD=2000000`（div=11，精确 2.000 Mbps），主机命令 `.\test-uart2-tx.ps1 -Port COM17 -BaudRate 2000000 -FrameCount 100`，结果 `valid=100/100`（first=105，last=204），`crc_errors=0`、`payload_errors=0`、`sequence_errors=0`、`discarded_bytes=0`、`elapsed_ms=9983`。规格内上限可靠。
+2M（CH340 官方规格上限）实测：`UART2_COM_BAUD=2000000`（div=11，精确 2.000 Mbps），主机命令 `.\tests\test-uart2-tx.ps1 -Port COM17 -BaudRate 2000000 -FrameCount 100`，结果 `valid=100/100`（first=105，last=204），`crc_errors=0`、`payload_errors=0`、`sequence_errors=0`、`discarded_bytes=0`、`elapsed_ms=9983`。规格内上限可靠。
 
 背景：本节早年的历史日志曾记录"CH340 3M 干净"，但当时每次只有十几字节的短文本行。用 72 字节突发帧考核 3M：
 
@@ -255,7 +255,7 @@ CH340 更换为 Silicon Labs CP210x 适配器（Windows 设备名 `Silicon Labs 
 每轮烧录后序号从 0 重启，`first/last` 区间长度均为 100，与帧数一致。每档验证 100 帧 = 7200 字节、约 10 秒，命令格式：
 
 ```powershell
-.\test-uart2-tx.ps1 -Port COM6 -BaudRate <请求波特率> -FrameCount 100 -TimeoutMs 20000
+.\tests\test-uart2-tx.ps1 -Port COM6 -BaudRate <请求波特率> -FrameCount 100 -TimeoutMs 20000
 ```
 
 结论与边界：
@@ -264,6 +264,43 @@ CH340 更换为 Silicon Labs CP210x 适配器（Windows 设备名 `Silicon Labs 
 2. CP210x 家族公开数据手册中多数型号的速率上限在 1~3 Mbps 量级，本次 8M/12M/24M 已高于公开规格；连续 100 帧零误码证明当前实物可用，但量产签核前建议用逻辑分析仪实测线速并做长时间误码考核。
 3. 每档仅 100 帧/约 10 秒，验证的是"该速率链路字节级正确"，不等于长时间误码率指标。
 4. 测试帧每 100 ms 突发一次，平均速率远低于线速。另需注意：驱动 TX 为非阻塞逐字节提交，连续大流量发送时的实际吞吐受主循环 `bsp_uart2_com_process()` 调用频率限制，连续流场景应先评估主循环周期。
+
+### 逻辑分析仪独立验证（2026-09-09，Saleae Logic，3M）：物理层字节级正确
+
+前面所有 TX 验证都依赖 USB-UART 适配器转发。本节用逻辑分析仪直接抓 PE7 线上的波形，排除适配器变量。这也是对 CP210x 8M/12M/24M 超规格验证建议（上一节第 2 条）的第一次落实。
+
+方法：
+
+- 接线：PE7 → Saleae Logic CH1（对 GND 共地）；
+- 采集：数字 16 MS/s（3M 波特率的 5.33 倍过采样），分别用两条独立链路各采一轮——Saleae Automation API（Python SDK，gRPC 10430 端口）采 10 s；Logic 2 官方 MCP server（10530 端口）采 5 s；
+- 解码：Async Serial，3M、8N2（Logic 解码器停止位设 1 位不影响数据位判决，多出的停止位呈空闲高）；
+- 校验：`projects/microphone/tests/la_validate_frames.py` 按帧格式逐帧校验 CRC16、payload、序号、帧周期与字节间隔。
+
+结果：
+
+| 指标 | 10 s 采集（Automation API） | 5 s 采集（官方 MCP server） |
+|---|---|---|
+| 解码字节 | 7283 | 3600 |
+| 找到帧 | 101 | 50 |
+| CRC16 + payload 通过 | **101/101** | **50/50** |
+| 序号断档/重复 | 0 | 0 |
+| 帧周期（均值/最小/最大） | 100.008 / 99.981 / 100.035 ms | 100.008 / 99.986 / 100.036 ms |
+| 帧内字节间隔（中位/p95/最大） | 31.750 / 45.813 / 107.750 µs | 31.750 / 45.813 / 107.751 µs |
+| 帧外杂散字节 | 11（采集起点落在帧中间的同步伪数据） | 0 |
+
+两轮统计逐位一致（固件时序确定性），且序号跨帧连续，证明采集窗口内线上没有任何丢帧、错帧。
+
+结论：
+
+1. **3M 波特率下 UART2 TX 的物理层波形与协议内容逐位正确**，独立于任何 USB-UART 适配器。结合此前"板端 `tx_q == tx_done`、`tx_ovf=0`"的证据，进一步坐实历史 CH340 3M 丢帧源于适配器超规格，板端发送路径无辜。
+2. **字节间隔中位数 31.75 µs**：字节在线上并非背靠背（3M 下一字节仅 3.33 µs）。这是轮询式 TX 驱动的特征——`bsp_uart2_com_process()` 每轮主循环只提交一个字节并等待 BIT8 完成，31.75 µs 即主循环一圈耗时（p95 45.8 µs、最大 107.8 µs 为偶发其他任务插入）。因此一帧 72 字节实际占线约 2.5 ms，有效吞吐约 28.6 KB/s。测试与业务够用；若需跑满线速的连续流，TX 侧需改为队列连续排空（一次中断/查询提交多字节）。
+3. 边界：本次验证覆盖 3M 档、两轮共 151 帧/约 10872 字节/15 秒，不外推为其他速率或长时间误码率指标。
+
+工具链说明：官方 MCP server 开启方式（Settings → Automation → MCP Server）、15 个工具清单及调用坑见 [../tool/ai_control_software_principles.md](../tool/ai_control_software_principles.md)；采集导出的 CSV 校验命令：
+
+```bash
+python projects/microphone/tests/la_validate_frames.py <导出的解码CSV>
+```
 
 
 普通 UART2 RX 已确认：特殊字节、重复字节以及脚本 1 ms 间隔均可正确接收；115200 bps 无间隔连续流在轮询和实验性 IRQ14 模式下都会丢包。完整数据和原因分析见 [uart2_rx_bringup.md](uart2_rx_bringup.md)。

@@ -3,7 +3,7 @@
     校验 UART2 独立 TX 测试帧。
 
 .EXAMPLE
-    .\test-uart2-tx.ps1 -Port COM17
+    .\tests\test-uart2-tx.ps1 -Port COM17
 #>
 [CmdletBinding()]
 param(

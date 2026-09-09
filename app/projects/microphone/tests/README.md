@@ -1,0 +1,52 @@
+# UART2 主机侧测试脚本
+
+本目录统一存放 UART2 板测所需的主机（PC）侧脚本：串口收发校验、逻辑分析仪解码数据校验、Logic 2 MCP 客户端。
+
+## 脚本清单
+
+| 脚本 | 用途 | 依赖 |
+|---|---|---|
+| `test-uart2-tx.ps1` | TX 板测校验：固件 `UART2_COM_TX_TEST_EN=1` 每 100ms 发 72 字节测试帧（`55 AA 5A A5`+序号+payload+CRC16），本脚本逐帧校验并统计丢帧 | PowerShell + .NET SerialPort |
+| `test-uart2.ps1` | RX 板测校验：固件 `UART2_COM_RX_TEST_EN=1` 原样回显，本脚本发送特殊字节/全字节/突发等用例并逐字节比对 | PowerShell + .NET SerialPort |
+| `la_validate_frames.py` | 逻辑分析仪导出的 Async Serial 解码 CSV 逐帧校验（CRC16/序号/帧周期/字节间隔），兼容 Automation API 与官方 MCP 两种导出格式 | Python 3 标准库 |
+| `logic2_mcp_client.py` | Saleae Logic 2 官方 MCP server（127.0.0.1:10530）最小客户端：列工具/调用工具，可完成采集→解码→导出全流程 | Python 3 标准库 |
+
+## 常用命令
+
+TX 板测（波特率随 `UART2_COM_BAUD` 修改后同步传参）：
+
+```powershell
+powershell -ExecutionPolicy Bypass -NoProfile -File .\tests\test-uart2-tx.ps1 `
+  -Port COM17 -BaudRate 115200 -FrameCount 100
+```
+
+RX 板测（固件切 `UART2_COM_RX_TEST_EN=1` 后）：
+
+```powershell
+powershell -ExecutionPolicy Bypass -NoProfile -File .\tests\test-uart2.ps1 `
+  -Port COM17 -BaudRate 115200 -Case all
+```
+
+逻辑分析仪端到端（Logic 2 开启 MCP Server 后）：
+
+```bash
+python tests/logic2_mcp_client.py call get_devices
+python tests/logic2_mcp_client.py call start_capture '{"logicDeviceConfiguration":{"logicChannels":{"digitalChannels":[1]},"digitalSampleRate":16000000},"captureConfiguration":{"timedCaptureMode":{"durationSeconds":10}}}'
+python tests/logic2_mcp_client.py call wait_capture '{"captureId":<id>}'
+python tests/logic2_mcp_client.py call add_analyzer '{"captureId":<id>,"analyzerName":"Async Serial","settings":{"Input Channel":{"numberValue":1},"Bit Rate (Bits/s)":{"numberValue":3000000}}}'
+python tests/logic2_mcp_client.py call export_data_table_csv '{"captureId":<id>,"filepath":"C:/tmp/cap.csv","analyzers":[{"analyzerId":<aid>,"radixType":3}],"iso8601Timestamp":false}'
+python tests/la_validate_frames.py C:/tmp/cap.csv
+```
+
+替代路径：Saleae 官方 Python SDK（`pip install logic2-automation`，gRPC 端口 10430）可完成同样的采集导出，二者独立可用。
+
+## 已知坑（Logic 2 MCP server 2.4.46）
+
+1. `add_analyzer` 的 settings 值必须包对象：`{"Bit Rate (Bits/s)":{"numberValue":3000000}}`，裸数字报 `should be object`；
+2. `export_data_table_csv` 的 `radixType`：1=二进制、2=有符号十进制、3=hex，缺省为 ASCII 字符（有损）；
+3. `iso8601Timestamp` 缺省 true；false 时 `start_time` 为相对秒。`la_validate_frames.py` 两种都认。
+
+## 测试数据判读参考
+
+- TX 校验结果与历史实测记录见 `docs/peripheral/uart2_tx_bringup.md`（含 2026-09-09 逻辑分析仪独立验证）；
+- RX 校验结果与丢包边界分析见 `docs/peripheral/uart2_rx_bringup.md`。

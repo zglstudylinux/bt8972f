@@ -101,20 +101,20 @@ powershell -ExecutionPolicy Bypass -NoProfile -File .\build.ps1 -Rebuild
 查看串口：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -NoProfile -File .\test-uart2.ps1 -ListPorts
+powershell -ExecutionPolicy Bypass -NoProfile -File .\tests\test-uart2.ps1 -ListPorts
 ```
 
 先跑低速特殊字节测试：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -NoProfile -File .\test-uart2.ps1 `
+powershell -ExecutionPolicy Bypass -NoProfile -File .\tests\test-uart2.ps1 `
   -Port COM7 -BaudRate 115200 -Case slow-special
 ```
 
 再跑完整测试：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -NoProfile -File .\test-uart2.ps1 `
+powershell -ExecutionPolicy Bypass -NoProfile -File .\tests\test-uart2.ps1 `
   -Port COM7 -BaudRate 115200 -Case all
 ```
 
@@ -176,7 +176,7 @@ powershell -ExecutionPolicy Bypass -NoProfile -File .\test-uart2.ps1 `
 
 - UART0：COM9，1.5 Mbps，用于诊断日志；
 - UART2：COM17，115200 bps、8N2，用于二进制回显；
-- 测试脚本：`test-uart2.ps1 -Case all -TimeoutMs 5000`。
+- 测试脚本：`tests\test-uart2.ps1 -Case all -TimeoutMs 5000`。
 
 结果：
 
@@ -207,7 +207,7 @@ powershell -ExecutionPolicy Bypass -NoProfile -File .\test-uart2.ps1 `
 
 - **RX 测试全部使用 CH340（COM17），CP210x 未参与任何 RX 测试**（CP210x 仅用于 TX 高速档验证）；
 - 固件为 RX 回显模式（`UART2_COM_RX_TEST_EN=1`、TX 测试与 IRQ 实验关闭），由用户逐档修改 `UART2_COM_BAUD` 后本地构建烧录；
-- 命令：`.\test-uart2.ps1 -Port COM17 -BaudRate <n> -Case all`。
+- 命令：`.\tests\test-uart2.ps1 -Port COM17 -BaudRate <n> -Case all`。
 
 结果汇总：
 
@@ -236,3 +236,4 @@ powershell -ExecutionPolicy Bypass -NoProfile -File .\test-uart2.ps1 `
 - CH340 链路上 RX 验收上限为 **2M**（与 TX 一致）；3M 起带间隔流量也出现字节级误码，属适配器超规格。
 - UART2 IRQ14 和 `CON BIT(2)` 已由实板证明可触发，但不改善无间隔连续流，并可能覆盖 UART1 的 IRQ14 注册，默认禁用。
 - 无间隔连续流在当前"主循环逐字节轮询"实现下所有速率都会丢字节（单字节接收缓冲所致），属实现边界而非脚本或链路问题。需要突发/连续流能力时的路径：受限排空式轮询优化，或改用带 FIFO 和专用中断的 HUART，或取得原厂 UART2 FIFO/中断资料后重新设计。
+- 下一步可用逻辑分析仪（Saleae Logic，工具链见 `projects/microphone/tests/README.md` 与 [../tool/ai_control_software_principles.md](../tool/ai_control_software_principles.md)）直接抓 PB1：在无间隔突发用例中同步观测 RX 线上实际到达的字节序列，区分"硬件覆盖前字节已到达"与"线上波形本身异常"，把第 7 节"丢失发生在硬件覆盖环节"的推断升级为波形级证据。TX 侧已于 2026-09-09 用同一方法完成 3M 逐位验证（见 [uart2_tx_bringup.md](uart2_tx_bringup.md) 逻辑分析仪独立验证一节）。
