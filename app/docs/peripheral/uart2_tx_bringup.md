@@ -4,6 +4,16 @@
 >
 > 证据分为：**原厂 PDF 明确**、**SDK 源码/静态库明确**、**本项目实测**和**待原厂确认**。没有量化数据的实验不表述为芯片规格。
 
+## 0. 编写依据
+
+| 类别 | 出处 |
+|---|---|
+| 驱动实现 | `bsp/bsp_uart2_com.c`（TX 软件队列与 BIT8 完成判据迁移自原厂 `bsp/bsp_uart.c` 的 `uart1_putchar()` 语义，见 §1） |
+| 寄存器定义 | `include/sfr.h`（UART2CON/UART2DATA/UART2BAUD/UART2CPND 地址） |
+| 原厂资料 | `docs/bt897x无线麦SDK.pdf` 第 48–50 页（外设清单、PE7=TX2-G1/PB1=RX2-G2、独立时钟与波特率计算原则） |
+| 测试脚本 | `projects/microphone/tests/`：`test-uart2-tx.ps1`（主机帧校验）、`test-uart2.ps1`（RX 回显用例）、`la_validate_frames.py`（LA 解码 CSV 逐帧校验）、`logic2_mcp_client.py`（LA 采集客户端） |
+| 实测记录 | 2026-09-08（115200，CH340 COM17）；2026-09-09（2M CH340 COM17；3M/8M/12M/24M CP210x COM6；Saleae Logic 16 MS/s 双链路线级采集） |
+
 ## 1. 已确认结论
 
 ### 原厂 PDF 明确
@@ -185,6 +195,54 @@ powershell -ExecutionPolicy Bypass -NoProfile -File .\tests\test-uart2-tx.ps1 `
 ```
 
 测试完成后应将 `UART2_COM_TX_TEST_EN` 恢复为 0，避免测试流量占用业务 TX 队列。
+
+### 测试原理与归因方法
+
+**帧格式为什么能查出问题**——72 字节测试帧的每个字段都有明确的检错目标：
+
+| 字段 | 检错覆盖 |
+|---|---|
+| 同步头 `55 AA 5A A5` | 帧定位；主机丢弃杂散字节直到重新同步，杂散量记入 `discarded_bytes` |
+| 16 位递增序号 | 查丢帧（断档）、重复帧、乱序 |
+| 64 字节 payload=(seq+i)&0xFF | 递增模式可查字节滑移：丢 1 字节后所有后续字节与期望错位，`mismatch` 首个不一致位置即丢失处 |
+| CRC-16/MODBUS（帧尾 LE） | 查上述之外任意比特错；CRC 错即判坏帧 |
+
+**三重独立验证**——主机校验、板端计数、逻辑分析仪互不依赖，联合才能把问题归因到正确环节：
+
+1. 主机逐帧校验 = 链路级结论（板 + 适配器 + 线）；
+2. UART0 诊断 `tx_q / tx_done / tx_ovf` = 板端发送队列事实（`tx_q==tx_done` 且 `tx_ovf=0` 证明板端逐字节完整发出，逐字节等 BIT8 的软件结构上不可能跳过字节）；
+3. LA 抓 PE7 波形 = 物理级独立事实（完全不经过适配器）。
+
+归因决策树（两个实测案例方向相反，说明单一证据源不可靠）：
+
+```mermaid
+flowchart TD
+    A["主机校验 valid 不满 100/100"] --> B{"板端 tx_q==tx_done 且 tx_ovf==0 ?"}
+    B -- "否" --> C["板端发送路径问题：查队列溢出、主循环阻塞"]
+    B -- "是" --> D["板端已完整发出，丢失在板外"]
+    D --> E{"LA 抓 PE7 波形逐位正确？"}
+    E -- "否" --> F["芯片发送问题：查波特率分频、信号完整性"]
+    E -- "是" --> G["波形正确但主机收错 → 适配器或探头问题"]
+    G --> H["实例1：CH340 3M 超规格丢帧（§7 实测）"]
+    G --> I["实例2：HUART 8M 探头伪影（huart_tx_bringup.md §3.2）"]
+```
+
+测试帧的发送与校验时序：
+
+```mermaid
+sequenceDiagram
+    participant H as 主机 test-uart2-tx.ps1
+    participant B as 固件 bsp_uart2_com
+    loop 每 100 ms
+        B->>B: 组帧 72B(magic+seq+payload+CRC) 入 128B 队列
+        loop 每圈主循环
+            B->>B: BIT8 完成？→ 取队列下一字节写 UART2DATA
+        end
+        B-->>H: PE7 字节流（字节间隔≈主循环周期，3M 实测中位 31.75µs）
+    end
+    H->>H: 扫描同步头 → 按 72 字节截帧 → 核对序号/payload/CRC
+    H->>H: 统计 valid / crc_errors / sequence_errors / discarded_bytes
+```
 
 ### 115200 bps 独立 TX 实板结果（2026-09-08）
 

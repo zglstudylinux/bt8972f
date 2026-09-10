@@ -4,6 +4,17 @@
 >
 > 证据分为：**原厂 PDF 明确**、**SDK 源码/静态库明确**、**本项目实测**和**待原厂确认**。
 
+## 0. 编写依据
+
+| 类别 | 出处 |
+|---|---|
+| 本工程驱动 | `bsp/bsp_huart_com.c`（DMA 块接收 + 回调入环形缓冲 + 回显状态机 + 诊断计数，本文实测所用固件即出自该文件） |
+| 收发模型出处 | `modules/huart_audio/huart_audio_in_mix.c:71-75,115-144`（rxbuf 块 + `huart_rx_done_cb` 回调，4M 音频连续流在用）；`modules/test/vusb_test.c:21-28`（回调路径内 `huart_get_rxcnt()` 取本次长度）；`bsp/bsp_huart.c:15-48`（库到应用的回调分发入口） |
+| 关键反证 | EQ 在线调试是量产功能且命令长度远小于 `EQ_BUFFER_LEN=270`——若回调只在收满缓冲后触发，EQ 永远无法工作；反证"线路空闲也会触发回调" |
+| 原厂资料 | `docs/bt897x无线麦SDK.pdf` 第 48–50 页；`include/config_define.h:379` "INTF_HUART = 2 高速串口(DMA模式)" |
+| 测试脚本 | `projects/microphone/tests/test-uart2.ps1`（特殊字节/间隔/无间隔突发用例与逐字节比对） |
+| 实测记录 | 2026-09-10，CH340 COM17 @2M：回显全套用例 + UART0 诊断三方对账（`blk=5 / rx=1025 / tx=1025 / rx_ovf=0`，多轮重复） |
+
 ## 1. 为什么用 HUART 收：与 UART2 的本质区别
 
 UART2 在本 SDK 中只有一个单字节接收缓冲，主循环轮询来不及取就被硬件覆盖，**无间隔连续流在所有波特率下都丢字节**（115200 下捕获率仅 ~54%，见 `uart2_rx_bringup.md` 第 6/7 节）。HUART 是库级 **DMA 块接收**：硬件自动把字节流搬进应用提供的缓冲，收满一块或线路空闲才通知一次软件，从机制上消除了逐字节轮询。
@@ -21,18 +32,44 @@ UART2 在本 SDK 中只有一个单字节接收缓冲，主循环轮询来不及
 
 ### 本工程实现（bsp/bsp_huart_com.c）
 
-```
-PB1 ──> HUART DMA 块接收(512B rxbuf) ──> huart_rx_done_cb() [ISR]
-                                            │  huart_get_rxcnt() 取长度
-                                            ▼
-                                     1KB 软件环形缓冲(head/tail，满则丢新并计数)
-                                            │
-主循环 bsp_huart_com_process() ─────────────┘
-    ├─ 回显模式：批量取出(≤128B/批) → tx_done 握手 → huart_tx() 原样回发
-    └─ 诊断：UART0 每 2s 打印 blk/rx/rx_ovf/tx/tx_done/tx_skip/rxcnt
+```mermaid
+flowchart TD
+    A["PB1 线上字节流"] --> B["HUART 库 DMA 块接收（写入 512B rxbuf，寄存器级黑盒）"]
+    B -- "块满或线路空闲" --> C["huart_rx_done_cb（ISR 上下文，本工程实现）"]
+    C --> D["huart_get_rxcnt() 取本次长度（消费后自动归零）"]
+    D --> E["搬入 1KB 软件环形缓冲（满则丢新并计数 rx_ovf）"]
+    E --> F["主循环 bsp_huart_com_process()（func.c 挂接）"]
+    F -- "回显测试模式" --> G["批量取出≤128B → tx_done 握手 → huart_tx 原样回发 → PE7"]
+    F -- "业务模式" --> H["bsp_huart_com_get() 逐字节消费"]
+    C -.-> I["诊断计数 blk/rx/rx_ovf → UART0 每 2s"]
 ```
 
 ## 3. 实测结论（2026-09-10，CH340 COM17 @2 Mbps，8N2）
+
+### 测试原理
+
+回显闭环与 UART2 版本同构（见 `uart2_rx_bringup.md` §4「测试原理」），HUART 版的判读规则换成块粒度：
+
+- `blk`（回调次数）应等于用例数——每种长度的突发恰好触发 1 次"线路空闲后回调"，`blk` 偏多说明块长小于突发被拆块；
+- `rx` 应等于主机发送字节数、`tx` 等于回显字节数、`rx_ovf=0`——三者完整而主机仍缺字节时，丢失在适配器/链路（固件无辜）；
+- `rx` 缺斤且 `rx_ovf=0` → 丢在 DMA 环节（当前配置下未发生）。
+
+```mermaid
+sequenceDiagram
+    participant H as 主机 test-uart2.ps1
+    participant D as HUART DMA（512B 块）
+    participant C as rx_done_cb（ISR）
+    participant M as 主循环回显
+    H->>D: 无间隔突发 257 字节
+    D-->>C: 线路空闲后 1 次回调（blk=blk+1）
+    C->>C: rxcnt=257 → 搬入环形缓冲（rx=rx+257）
+    M->>M: 取出 → 分批 huart_tx 回发（tx 累加）
+    M-->>H: PE7 回显字节流
+    H->>H: 逐字节比对 PASS/FAIL
+    H->>H: 三方对账 blk/rx/tx → 定位丢失环节
+```
+
+### 实测数据
 
 固件 `HUART_COM_RX_TEST_EN=1`（二进制回显），主机 `tests/test-uart2.ps1` 逐字节比对：
 
@@ -51,7 +88,23 @@ PB1 ──> HUART DMA 块接收(512B rxbuf) ──> huart_rx_done_cb() [ISR]
 
 ### 4.1 DMA 块长必须 ≥ 单次突发长度
 
-`HUART_COM_BLOCK_SIZE=64` 时无间隔突发失败，签名高度一致：**第 1 块（64 字节）全对，从第 64 字节起精确跳过 12 字节后继续正确**。机理：块满回调 → 主循环立刻回显 → **回显 TX 与后续 RX 字节并发**，而原厂全部在树用例均为半双工（`tx_port==rx_port` 同一根脚，收完才发），并发场景未经验证且实测丢字节（irrelevant to 波特率：1ms 间隔的回显交错 100% 通过，因为收发在时间上错开）。
+`HUART_COM_BLOCK_SIZE=64` 时无间隔突发失败，签名高度一致：**第 1 块（64 字节）全对，从第 64 字节起精确跳过 12 字节后继续正确**。机理：块满回调 → 主循环立刻回显 → **回显 TX 与后续 RX 字节并发**，而原厂全部在树用例均为半双工（`tx_port==rx_port` 同一根脚，收完才发），并发场景未经验证且实测丢字节（与波特率无关：1ms 间隔的回显交错 100% 通过，因为收发在时间上错开）。
+
+块长不足时的丢字节时序：
+
+```mermaid
+sequenceDiagram
+    participant H as 主机
+    participant D as HUART DMA（64B 块）
+    participant E as 回显 TX
+    H->>D: 突发字节 0..63
+    D-->>E: 块满回调#1 → 回显 TX 立即启动（占用发送引擎）
+    H->>D: 字节 64..75 继续到达（2M 下仅 6µs）
+    Note over D,E: TX 与 RX 并发窗口——原厂用例均为半双工，并发行为未验证
+    D-->>E: 后续回调：字节 64..75 已丢失（12 字节跳变签名）
+    H->>H: 从第 64 字节起 mismatch，之后逐字节前移
+    Note over H,D: 对照：块长 512 ≥ 突发长度 → 整段突发单块，回调仅在空闲后触发，收发错开 → 0 丢失
+```
 
 修复与规则：`HUART_COM_BLOCK_SIZE=512` ≥ 测试最长突发 257 字节，整段突发落入同一 DMA 块，回调只在线路空闲后触发一次，收发自然错开。**若业务存在超过块长的连续流，须启用 `rxbuf_loop=1` 环形模式（原厂 BQB 用法）重做验证，当前未评估。**
 

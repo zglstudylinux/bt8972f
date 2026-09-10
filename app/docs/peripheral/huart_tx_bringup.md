@@ -4,6 +4,17 @@
 >
 > 证据分为：**原厂 PDF 明确**、**SDK 源码/静态库明确**、**本项目实测**和**待原厂确认**。没有量化数据的实验不表述为芯片规格。
 
+## 0. 编写依据
+
+| 类别 | 出处 |
+|---|---|
+| 本工程驱动 | `bsp/bsp_huart_com.c`（发送链路、静态帧缓冲契约、诊断计数，本文实测所用固件即出自该文件） |
+| 库 API | `libs/api_uart.h`（`huart_t`/`huart_init`/`huart_tx`/`huart_get_rxcnt` 等；实现在 `libs/libdrivers.a` 内，寄存器级黑盒） |
+| 原厂在树用例 | `bsp/bsp_huart.c`（EQ 调试 1.5M）；`modules/test/vusb_test.c:199-215`（独立 `huart_t` 初始化写法）；`modules/huart_audio/huart_audio_in_mix.c:115-144`（块接收+回调模型，4M）；`modules/debug/debug.c:135-138`（大块分半发送，暗示单次块长上限）；`modules/debug/audio_dump.c`（8M 档位，注释"受限于逻辑分析仪"） |
+| 原厂资料 | `docs/bt897x无线麦SDK.pdf` 第 48–50 页；`include/config_define.h:379` "INTF_HUART = 2 高速串口(DMA模式)" |
+| 测试脚本 | `projects/microphone/tests/`：`test-uart2-tx.ps1`（主机帧校验）、`la_validate_frames.py`（LA 解码逐帧校验）、`logic2_mcp_client.py`（LA 采集） |
+| 实测记录 | 2026-09-10：CH340 COM17（2M 回显对账）；CP210x COM6（2M/3M/4M/8M/12M TX 扫描）；Saleae Logic 24 MS/s 线级采集（12M/24M/8M 波形与解码） |
+
 ## 1. 已确认结论
 
 ### 原厂 PDF 明确
@@ -49,6 +60,18 @@ void huart_wait_txdone(void);               // modules/debug/debug.h
 - 发送链路：业务代码/测试模式把数据交给 `bsp_huart_com` 层，由它持 `tx_busy` 标志调 `huart_tx()`，`huart_tx_done_cb()`（ISR 上下文）清标志并计数。
 - 诊断走 UART0 每 2 秒一行：`[huart] blk=… rx=… rx_ovf=… tx=… tx_done=… tx_skip=… rxcnt=…`。
 
+发送数据通路：
+
+```mermaid
+flowchart TD
+    A["业务/测试模式组帧到静态缓冲（栈缓冲会在返回后被复用，见 §2.1）"] --> B["tx_busy=1，调用 huart_tx(buf,len)"]
+    B --> C["库内 DMA 把缓冲搬运到 HUART 发送器（异步，立即返回）"]
+    C --> D["PE7 线上字节流（背靠背，帧内字节间隔中位约 1.7µs@8M）"]
+    D --> E["块发完 → 库回调 huart_tx_done_cb（ISR 上下文）"]
+    E --> F["清 tx_busy，tx_done 计数"]
+    F --> A
+```
+
 ## 2. 关键契约与踩坑
 
 ### 2.1 发送缓冲在 tx_done 前必须保持有效（本项目实测踩坑）
@@ -64,6 +87,39 @@ HUART 是单外设。`EQ_DBG_IN_UART`（在线 EQ 调试）、`CHARGE_BOX_INTF_S
 PE7/PB1 同时是 UART2 的映射脚。`UART2_COM_EN` 与 `HUART_COM_EN` 不能同时为 1，否则 `FUNCMCON2` 映射互相覆盖。
 
 ## 3. 波特率实测扫描（2026-09-10）
+
+### 测试原理
+
+帧格式与检错覆盖同 `uart2_tx_bringup.md` §7「测试原理与归因方法」（同步头定位、序号查丢帧乱序、payload 递增查字节滑移、CRC-16/MODBUS 查任意比特错）。HUART 版本的差别只在固件发送方式：帧进**静态缓冲**后由 `huart_tx()` 一次 DMA 发出，帧内字节背靠背，帧间由 `tx_done` 握手节流：
+
+```mermaid
+sequenceDiagram
+    participant H as 主机 test-uart2-tx.ps1
+    participant F as 固件 huart_com_tx_test
+    participant L as HUART 库（DMA）
+    loop 每 100 ms（tx_done 握手）
+        F->>F: 组帧 72B 到静态缓冲
+        F->>L: huart_tx(buf,72)，busy=1
+        L-->>H: DMA 背靠背发出（帧内间隔≈1.7µs@8M）
+        L->>F: huart_tx_done_cb → busy=0
+    end
+    H->>H: 扫描同步头 → 72 字节截帧 → 序号/payload/CRC 校验
+```
+
+每个波特率档位的判定流程（归因决策树总纲见 `uart2_tx_bringup.md` §7，此处不重复）：
+
+```mermaid
+flowchart TD
+    A["新波特率档位"] --> B["主机 100 帧逐帧校验"]
+    B -- "valid=100/100" --> C["该档可靠（链路级结论，注明适配器与时长）"]
+    B -- "valid=0 且 discarded≈全部字节" --> D["同步头都找不到 → 查线上字节内容"]
+    D --> E["LA 抓线：脉冲宽度量化判真实波特率 + 独立解码看字节序"]
+    E -- "真实波特率与请求不符" --> F["分频/时钟问题"]
+    E -- "波特率正确但帧中段字节重复/跳变" --> G["TX 引擎供数不足 underrun（12M/24M 实测，§3.1）"]
+    B -- "偶发丢帧且板端 tx 计数完整" --> H["主机侧适配器/探头问题：换链路复测（8M 探头伪影实例，§3.2）"]
+```
+
+### 实测数据
 
 固件：`HUART_COM_TX_TEST_EN=1`，每 100 ms 发一帧 72 字节（55 AA 5A A5 + u16 LE 序号 + 64 字节 payload=(seq+i)&0xFF + CRC-16/MODBUS LE）。主机 `tests/test-uart2-tx.ps1` 逐帧校验（CP210x COM6，8N2）：
 
