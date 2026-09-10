@@ -1,6 +1,6 @@
-# UART2 主机侧测试脚本
+# UART2/HUART 主机侧测试脚本
 
-本目录统一存放 UART2 板测所需的主机（PC）侧脚本：串口收发校验、逻辑分析仪解码数据校验、Logic 2 MCP 客户端。
+本目录统一存放串口板测所需的主机（PC）侧脚本：串口收发校验、逻辑分析仪解码数据校验、Logic 2 MCP 客户端。脚本同时服务 UART2 普通串口与 HUART 高速串口（帧格式一致，固件侧由 `config.h` 的 `UART2_COM_*` / `HUART_COM_*` 开关切换）。
 
 ## 脚本清单
 
@@ -49,4 +49,11 @@ python tests/la_validate_frames.py C:/tmp/cap.csv
 ## 测试数据判读参考
 
 - TX 校验结果与历史实测记录见 `docs/peripheral/uart2_tx_bringup.md`（含 2026-09-09 逻辑分析仪独立验证）；
-- RX 校验结果与丢包边界分析见 `docs/peripheral/uart2_rx_bringup.md`。
+- RX 校验结果与丢包边界分析见 `docs/peripheral/uart2_rx_bringup.md`；
+- **HUART 高速串口**（TX 波特率扫描至 8M、12M+ underrun 结论、RX 无间隔突发固件侧 100%）见 `docs/peripheral/huart_tx_bringup.md` 与 `docs/peripheral/huart_rx_bringup.md`，固件开关换成 `HUART_COM_EN`/`HUART_COM_BAUD`/`HUART_COM_TX_TEST_EN`/`HUART_COM_RX_TEST_EN`，测试命令不变。
+
+### HUART 测试注意
+
+- 使能 `HUART_COM_EN=1` 时必须关闭 `EQ_DBG_IN_UART` 和 `UART2_COM_EN`（单外设与共脚互斥，否则链接报错/映射冲突）；
+- 逻辑分析仪判定 ≥8M 信号时必须与主机侧交叉验证——LA 探头电容+地环路在 8M 产生过观测伪影（详见 huart_tx_bringup.md 第 3.2 节）；
+- 长时间采集（>7s @24MS/s）Logic 设备可能 USB ReadTimeout 导致采样流缺失、解码出现成簇坏帧，应缩短单次采集时长。

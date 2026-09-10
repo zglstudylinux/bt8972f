@@ -437,6 +437,9 @@ void func_process(void)
 #if UART2_COM_EN
     bsp_uart2_com_process();                            //普通串口测试口回显
 #endif
+#if HUART_COM_EN
+    bsp_huart_com_process();                            //高速串口测试口收发处理
+#endif
     if(sys_cb.usbdev_insert) {
 #if ADAPTER_USB_MIC_RX_EN || DEVICE_USB_EN
         usb_device_process();

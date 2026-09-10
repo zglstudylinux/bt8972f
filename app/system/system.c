@@ -651,6 +651,10 @@ void sys_init(void)
     bsp_uart2_com_init(UART2_COM_BAUD);
 #endif
 
+#if HUART_COM_EN
+    bsp_huart_com_init(HUART_COM_BAUD);
+#endif
+
 #if TBOX_TEST_EN
     bsp_vusb_test_process();
 #endif

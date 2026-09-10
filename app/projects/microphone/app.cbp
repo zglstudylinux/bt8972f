@@ -115,6 +115,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../bsp/bsp_uart2_com.h" />
+		<Unit filename="../../bsp/bsp_huart_com.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../bsp/bsp_huart_com.h" />
 		<Unit filename="../../functions/func.c">
 			<Option compilerVar="CC" />
 		</Unit>
