@@ -101,7 +101,7 @@ class DebugReader:
         self.ser.close()
 
 
-def send_paced(ser, data, chunk, delay_ms, log_every=20):
+def send_paced(ser, data, chunk, delay_ms, log_every=200):
     """按 块大小+固定间隔 节流发送（Windows sleep 只会偏长不会偏短，方向安全）"""
     total = len(data)
     sent = 0
@@ -177,6 +177,8 @@ def main():
     ap.add_argument("--chunk", type=int, default=None, help="覆盖 profile 块大小")
     ap.add_argument("--delay-ms", type=float, default=None, help="覆盖 profile 块间隔")
     ap.add_argument("--bauds", default=None, help="只测这些档位(逗号分隔)，其余档自动打点跳过")
+    ap.add_argument("--start-baud", type=int, default=None,
+                    help="板子已停在某一档等待数据时，直接从该档开始(跳过横幅/首条提示等待)")
     ap.add_argument("--out", default=None, help="结果 markdown 追加文件(默认 tests/serial_max_baud_results.md)")
     args = ap.parse_args()
 
@@ -216,9 +218,11 @@ def main():
                  profile["delay_ms"], time.strftime("%Y-%m-%d %H:%M:%S"), hdr, sep))
 
     rows = []
+    results = []   # (baud, (rx_pass, tx_pass))，用于结尾汇总
 
-    def emit(row):
+    def emit(row, baud, rx_pass, tx_pass):
         rows.append(row)
+        results.append((baud, (rx_pass, tx_pass)))
         print(" ".join(row))
         with open(out_path, "a", encoding="utf-8") as f:
             f.write(" ".join(row) + "\n")
@@ -232,49 +236,71 @@ def main():
         sys.exit(1)
 
     try:
-        # 等待起始横幅（板子复位后打印；错过也不影响，直接等 Baud 提示）
-        print("等待板端横幅...（若板子已在跑测试，请按复位键重新开始）")
-        banner = dbg.wait_re(re.compile(r"=== Serial Max Baud Test \((\w+)\) Start ==="), 15)
-        if banner:
-            print("板端横幅: %s" % banner.group(0))
-        if banner and banner.group(1) != args.periph.upper():
-            print("!! 固件外设(%s)与 --periph(%s) 不一致，请确认烧录的固件" % (banner.group(1), args.periph))
+        banner = None
+        pending_baud = args.start_baud
+        if pending_baud:
+            print("跳过横幅/首条提示等待，直接从板子当前等待的档位 %d 开始" % pending_baud)
+        else:
+            # 等待起始横幅（板子复位后打印；错过也不影响，直接等 Baud 提示）
+            print("等待板端横幅...（请按一下板子复位键，之后不要再动接线）")
+            banner = dbg.wait_re(re.compile(r"=== Serial Max Baud Test \((\w+)\) Start ==="), 300)
+            if banner:
+                print("板端横幅: %s" % banner.group(0))
+                dbg.lines.clear()   # 丢弃复位前的陈旧输出，保证从干净状态同步
+            else:
+                print("!! 90s 未等到横幅（板子可能不是本测试固件），仍继续尝试……")
+            if banner and banner.group(1) != args.periph.upper():
+                print("!! 固件外设(%s)与 --periph(%s) 不一致，请确认烧录的固件" % (banner.group(1), args.periph))
 
         while True:
-            # 等待下一档提示或 Done 横幅（二选一，避免吞掉彼此）
             m = None
             done = False
-            deadline = time.time() + 60
-            while time.time() < deadline:
-                line = dbg.next_line(0.3)
-                if line is None:
-                    continue
-                if DONE_RE.search(line):
-                    done = True
+            if pending_baud:
+                baud = pending_baud
+                pending_baud = None
+            else:
+                # 等待下一档提示或 Done 横幅（二选一，避免吞掉彼此）
+                deadline = time.time() + 60
+                while time.time() < deadline:
+                    line = dbg.next_line(0.3)
+                    if line is None:
+                        continue
+                    if DONE_RE.search(line):
+                        done = True
+                        break
+                    mp = PROMPT_RE.search(line)
+                    if mp:
+                        m = mp
+                        break
+                    if line.strip():
+                        print("    [板] " + line)
+                if done:
                     break
-                mp = PROMPT_RE.search(line)
-                if mp:
-                    m = mp
+                if not m:
+                    if banner:
+                        print("!! 板端已打印 Start 横幅但 60s 内无 [Baud] 提示：固件在首个外设初始化处挂起，")
+                        print("!! 请再按一次复位重试；若复现，需要排查固件（注意启动日志是否有 LVD 低压复位）")
+                    else:
+                        print("!! 60s 内未收到板端 [Baud] 提示或 Done 横幅，退出。请检查调试口接线/是否已烧测试固件")
                     break
-                if line.strip():
-                    print("    [板] " + line)
-            if done:
-                break
-            if not m:
-                print("!! 60s 内未收到板端 [Baud] 提示或 Done 横幅，退出。请检查调试口接线/是否已烧测试固件")
-                break
-            baud = int(m.group(1))
+                baud = int(m.group(1))
 
+            baud_ok = True
             try:
                 dser.baudrate = baud
             except Exception as e:
-                print("!! 数据口不支持 %d: %s" % (baud, e))
+                baud_ok = False
+                print("!! 数据口不支持 %d: %s（打点跳过该档，该档记适配器不支持）" % (baud, e))
 
-            if only_bauds is not None and baud not in only_bauds:
-                print("[跳过] %d (不在 --bauds 列表)" % baud)
+            if not baud_ok or (only_bauds is not None and baud not in only_bauds):
+                if baud_ok:
+                    print("[跳过] %d (不在 --bauds 列表)" % baud)
                 poke_advance(dser)
                 dbg.wait_re(RX_RE, 10)
                 dbg.wait_re(ECHO_RE, 10)
+                if not baud_ok:
+                    emit(["| %d | %s | 适配器不支持该波特率，档位无效 | | | | - | - |" %
+                          (baud, args.adapter)], baud, False, False)
                 continue
 
             print("[Baud %d] 发送中 (chunk=%d delay=%gms)..." % (baud, profile["chunk"], profile["delay_ms"]))
@@ -291,7 +317,9 @@ def main():
             ok, match_len, first_diff, echo_len = compare_echo(data[:got] if got <= expect else data, echoed)
 
             rx_pass = (got == expect and err == 0 and drop == 0)
-            tx_pass = ok and got == expect
+            # 重建回传：TX 判定只看回传内容是否与板端声称长度(got)的码流一致，
+            # got<expect 属于 RX 方向的损失，不应拖累 TX 判定
+            tx_pass = ok and got > 0
             note = ""
             if first_diff >= 0:
                 note = " (首差异@%d)" % first_diff
@@ -302,7 +330,8 @@ def main():
                   (baud, args.adapter, got, err, drop,
                    "OK" if ok else "DIFF" + note,
                    "PASS" if rx_pass else "FAIL",
-                   "PASS" if tx_pass else "FAIL")])
+                   "PASS" if tx_pass else "FAIL")],
+                 baud, rx_pass, tx_pass)
 
         print(sep)
         print("完成。结果已追加到 %s" % out_path)
@@ -310,16 +339,14 @@ def main():
         dser.close()
         dbg.close()
 
-    if rows:
+    if results:
         def max_ok(idx):
-            vals = []
-            for r in rows:
-                cells = [c.strip("| ").strip() for c in r.split("|") if c.strip()]
-                if cells[idx] == "PASS":
-                    vals.append(int(cells[0]))
+            vals = [b for b, flags in results if flags[idx]]
             return max(vals) if vals else None
-        print("RX 最大无错档: %s" % (max_ok(6),))
-        print("TX 最大无错档: %s" % (max_ok(7),))
+        print("RX 最大无错档: %s" % (max_ok(0),))
+        print("TX 最大无错档: %s" % (max_ok(1),))
+    else:
+        print("（无有效结果行）")
 
 
 if __name__ == "__main__":

@@ -6,11 +6,34 @@
 
 | 脚本 | 用途 | 依赖 |
 |---|---|---|
+| `serial_max_baud_test.py` | **普通/高速串口最大波特率统一测试编排**：监听 COM9 板端提示自动换档换波特率，每档收发比对并实时输出结果表（UART2/HUART、CH340/CP210x 参数化） | Python 3 + pyserial |
 | `test-uart2-tx.ps1` | TX 板测校验：固件 `UART2_COM_TX_TEST_EN=1` 每 100ms 发 72 字节测试帧（`55 AA 5A A5`+序号+payload+CRC16），本脚本逐帧校验并统计丢帧 | PowerShell + .NET SerialPort |
 | `test-uart2.ps1` | RX 板测校验：固件 `UART2_COM_RX_TEST_EN=1` 原样回显，本脚本发送特殊字节/全字节/突发等用例并逐字节比对 | PowerShell + .NET SerialPort |
 | `huart_serial_echo.py` | HUART 双机回传板测：PC 发 `huart_dual_inc.bin`（50 760 字节递增码流）→ 固件 `HUART_BAUD_TEST_EN=1` 回传 → 逐字节比对打 PASS/FAIL | Python 3 + pyserial |
 | `la_validate_frames.py` | 逻辑分析仪导出的 Async Serial 解码 CSV 逐帧校验（CRC16/序号/帧周期/字节间隔），兼容 Automation API 与官方 MCP 两种导出格式 | Python 3 标准库 |
 | `logic2_mcp_client.py` | Saleae Logic 2 官方 MCP server（127.0.0.1:10530）最小客户端：列工具/调用工具，可完成采集→解码→导出全流程 | Python 3 标准库 |
+
+## 最大波特率统一测试（serial_max_baud_test.py，2026-09-11 定稿）
+
+配套固件 `modules/test/serial_max_baud_test.c`（`SERIAL_MAX_BAUD_TEST_EN` + `SERIAL_MAX_BAUD_TEST_USE_UART2` 选择外设），
+每档三段式：PC 发 50KB 递增码流 → 板端递增校验（RX 真值）→ 板按基准重建码流回传（TX 独立判定）→ 自动爬梯。
+**完整结果表与归因见 `docs/peripheral/serial_max_baud_test_plan.md`**，速查：
+
+| 测试项 | 规格内实测最大无错 |
+|---|---|
+| UART2 RX | 460800（64B 突发，结构极限） |
+| UART2 TX | ≥1.5M（双适配器零误码，2M+ 待 LA） |
+| HUART RX | 2M（CH340 规格上限处板端全对） |
+| HUART TX | ≥1.5M（双适配器零误码，2M 待 LA） |
+
+```bash
+# UART2 构建态；数据口接适配器（板 PE7/PB1/GND），COM 号以设备管理器为准
+python tests/serial_max_baud_test.py --debug-com COM9 --data-com COM18 --periph uart2 --adapter ch340
+# HUART 构建态
+python tests/serial_max_baud_test.py --debug-com COM9 --data-com COM18 --periph huart --adapter ch340
+# 单档复测（配合 LA 抓波）；板子已停在等待档时可用 --start-baud 直接接管
+python tests/serial_max_baud_test.py ... --bauds 2000000,3000000
+```
 
 ## 常用命令
 

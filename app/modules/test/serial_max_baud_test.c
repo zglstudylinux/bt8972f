@@ -16,7 +16,8 @@
  * 普通串口/高速串口 最大波特率统一测试（单板 + PC 适配器）：
  * 每档波特率固定三段式，四个测试项（UART2-RX/TX、HUART-RX/TX）方法完全一致：
  *   1. RX：PC 发 50KB 递增码流 -> 板收满/500ms 空闲 -> 板端递增连续性校验（RX 方向真值）
- *   2. TX：板把收到的缓冲整块回传 -> PC 逐字节比对（TX 方向，配合 LA 可归因到适配器）
+ *   2. TX：板按递增基准重建码流后整块回传 -> PC 逐字节比对（TX 方向独立判定，
+ *      不受 RX 实收损坏影响；适配器回传方向的丢失由 PC 比对捕获，配合 LA 可归因）
  *   3. 打印统计后自动切下一档；PC 脚本靠 COM9 的 "[Baud xxx] waiting PC data..." 同步
  * PC 须按 profile 节流发送（HUART 512B+10ms 规避库非环形块缺陷；UART2 64B+8ms
  * 适配 128B 环形缓冲+主循环轮询排水），码流必须用递增（恒值会掩盖块错位）。
@@ -116,6 +117,7 @@ void huart_tx_done_cb(void)
 static void periph_init(u32 baud)
 {
 #if SERIAL_MAX_BAUD_TEST_USE_UART2
+    printf("[t] uart2 init %lu...\n", baud);
     bsp_uart2_com_init(baud);
 #else
     huart_t huart0;
@@ -258,6 +260,7 @@ void serial_max_baud_test_start(void)
     RTC_WDT_DIS();
 
     printf("\n=== Serial Max Baud Test (%s) Start ===\n", PERIPH_NAME);
+    printf("[t] enter ladder, wdt off\n");
 
     for (baud_idx = 0; baud_idx < BAUD_CNT; baud_idx++) {
         u8 data_received = 0;
@@ -285,10 +288,18 @@ void serial_max_baud_test_start(void)
             }
         }
 
-        // 板端校验（RX 方向真值）后整块回传（TX 方向）
+        // 板端校验（RX 方向真值）。回传前按递增基准重建码流：TX 方向与 RX
+        // 实收内容解耦，高波特率下 RX 的结构性丢失不会污染 TX 判定。
         verify_and_report();
+        {
+            u32 i;
+
+            for (i = 0; i < sm_state.rx_bytes; i++) {
+                sm_buf[i] = (u8)(i & 0xFF);
+            }
+        }
         periph_send(sm_buf, sm_state.rx_bytes);
-        printf("  [echo] %lu bytes sent\n", sm_state.rx_bytes);
+        printf("  [echo] %lu bytes sent (regen)\n", sm_state.rx_bytes);
     }
 
     printf("\n=== Serial Max Baud Test Done ===\n");
