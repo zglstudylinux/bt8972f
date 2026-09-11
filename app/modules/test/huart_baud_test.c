@@ -23,6 +23,8 @@ static const u32 baud_rates[] = {
     921600,
     1000000,
     1500000,
+    2000000,
+    3000000,
 };
 
 #define BAUD_CNT            (sizeof(baud_rates) / sizeof(baud_rates[0]))  // 波特率档位数量

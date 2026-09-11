@@ -67,7 +67,7 @@ python tests/la_validate_frames.py C:/tmp/cap.csv
 # 必须带 --chunk-size 512 --send-delay-ms 10（逐块节流），且只用递增码流——原因与实验矩阵见
 # docs/peripheral/huart_dual_failure_analysis.md（连续灌流与恒值码流都会得到不可信结果）
 python tests/huart_serial_echo.py COM17 115200 tests/huart_dual_inc.bin --chunk-size 512 --send-delay-ms 10
-# 板子自动切下一档，依次：230400 / 460800 / 921600 / 1000000 / 1500000
+# 板子自动切下一档，依次：230400 / 460800 / 921600 / 1000000 / 1500000 / 2000000 / 3000000
 ```
 
-进度看 UART0（COM9，1.5M）：`[Baud xxx] waiting PC data...` / `[rx] xxx bytes`。实测 115200~1.5M 六档全 PASS（2026-09-10）。
+进度看 UART0（COM9，1.5M）：`[Baud xxx] waiting PC data...` / `[rx] xxx bytes`。实测 115200~3M 八档：115200~1.5M 全 PASS（2026-09-10）；2M/3M 板端接收正确，仅 CH340 超规格/边界在回传方向有少量丢字节（2026-09-11，需规格内高速适配器做无适配器误差的验收）。
