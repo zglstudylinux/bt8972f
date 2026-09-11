@@ -709,6 +709,10 @@ SECTIONS
         *(.buf.huart_dual)
     } > sco_comm
 
+    .data_serial_max (NOLOAD) : {
+        *(.buf.serial_max)
+    } > sco_comm
+
     .eram_fot_qt __eram_vma (NOLOAD) : {
         *(.fot_data.buf)
         *(.qtest_buf)

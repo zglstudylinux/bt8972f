@@ -491,6 +491,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../modules/test/huart_baud_test.h" />
+		<Unit filename="../../modules/test/serial_max_baud_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../modules/test/serial_max_baud_test.h" />
 		<Unit filename="../../modules/test/iodm.c">
 			<Option compilerVar="CC" />
 		</Unit>
