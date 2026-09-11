@@ -1,4 +1,5 @@
 #include "include.h"
+#include "test/huart_baud_test.h"
 
 #define MEM_HEAP_SIZE           13*1024
 u8 mem_heap[MEM_HEAP_SIZE] AT(.mem_heap);
@@ -35,7 +36,11 @@ int main(void)
 #endif
 
     sys_init();
+#if HUART_BAUD_TEST_EN
+    huart_baud_test_start();                            //HUART 波特率压力测试（阻塞运行，完成后复位重启）
+#else
     func_run();
+#endif
     return 0;
 }
 

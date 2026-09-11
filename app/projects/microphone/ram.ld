@@ -705,6 +705,10 @@ SECTIONS
         *(.test_buf)
     } > aram
 
+    .data_huart_dual (NOLOAD) : {
+        *(.buf.huart_dual)
+    } > sco_comm
+
     .eram_fot_qt __eram_vma (NOLOAD) : {
         *(.fot_data.buf)
         *(.qtest_buf)

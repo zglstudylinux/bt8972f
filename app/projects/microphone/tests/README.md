@@ -8,6 +8,7 @@
 |---|---|---|
 | `test-uart2-tx.ps1` | TX 板测校验：固件 `UART2_COM_TX_TEST_EN=1` 每 100ms 发 72 字节测试帧（`55 AA 5A A5`+序号+payload+CRC16），本脚本逐帧校验并统计丢帧 | PowerShell + .NET SerialPort |
 | `test-uart2.ps1` | RX 板测校验：固件 `UART2_COM_RX_TEST_EN=1` 原样回显，本脚本发送特殊字节/全字节/突发等用例并逐字节比对 | PowerShell + .NET SerialPort |
+| `huart_serial_echo.py` | HUART 双机回传板测：PC 发 `huart_dual_inc.bin`（50 760 字节递增码流）→ 固件 `HUART_BAUD_TEST_EN=1` 回传 → 逐字节比对打 PASS/FAIL | Python 3 + pyserial |
 | `la_validate_frames.py` | 逻辑分析仪导出的 Async Serial 解码 CSV 逐帧校验（CRC16/序号/帧周期/字节间隔），兼容 Automation API 与官方 MCP 两种导出格式 | Python 3 标准库 |
 | `logic2_mcp_client.py` | Saleae Logic 2 官方 MCP server（127.0.0.1:10530）最小客户端：列工具/调用工具，可完成采集→解码→导出全流程 | Python 3 标准库 |
 
@@ -54,6 +55,19 @@ python tests/la_validate_frames.py C:/tmp/cap.csv
 
 ### HUART 测试注意
 
-- 使能 `HUART_COM_EN=1` 时必须关闭 `EQ_DBG_IN_UART` 和 `UART2_COM_EN`（单外设与共脚互斥，否则链接报错/映射冲突）；
+- 使能 `HUART_BAUD_TEST_EN=1`（或 `HUART_COM_EN=1`）时必须关闭 `EQ_DBG_IN_UART` 和 `UART2_COM_EN`（单外设与共脚互斥，否则链接报错/映射冲突）；
 - 逻辑分析仪判定 ≥8M 信号时必须与主机侧交叉验证——LA 探头电容+地环路在 8M 产生过观测伪影（详见 huart_tx_bringup.md 第 3.2 节）；
 - 长时间采集（>7s @24MS/s）Logic 设备可能 USB ReadTimeout 导致采样流缺失、解码出现成簇坏帧，应缩短单次采集时长。
+
+### HUART 双机回传压力测试（huart_baud_test + huart_serial_echo.py）
+
+固件切 `HUART_BAUD_TEST_EN=1`（同时关 `EQ_DBG_IN_UART`/`UART2_COM_EN`），引脚 PE7/PB1 与 UART2 一致。板子上电后逐档等待 PC 数据，PC 按档位发递增码流，板子回传后脚本自动比对：
+
+```bash
+# 必须带 --chunk-size 512 --send-delay-ms 10（逐块节流），且只用递增码流——原因与实验矩阵见
+# docs/peripheral/huart_dual_failure_analysis.md（连续灌流与恒值码流都会得到不可信结果）
+python tests/huart_serial_echo.py COM17 115200 tests/huart_dual_inc.bin --chunk-size 512 --send-delay-ms 10
+# 板子自动切下一档，依次：230400 / 460800 / 921600 / 1000000 / 1500000
+```
+
+进度看 UART0（COM9，1.5M）：`[Baud xxx] waiting PC data...` / `[rx] xxx bytes`。实测 115200~1.5M 六档全 PASS（2026-09-10）。
