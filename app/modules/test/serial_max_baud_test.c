@@ -25,6 +25,19 @@
 
 #if SERIAL_MAX_BAUD_TEST_USE_UART2
 #define PERIPH_NAME                 "UART2"
+#if SERIAL_MAX_BAUD_TEST_TX_LA_EN
+// TX-LA 梯子：适配器接不住的 2M+ 档 + 物理层上探
+// （12M/24M 在 LA 24MS/s 下仅能脉宽量化分频，无法逐位解码，如实标注）
+static const u32 baud_rates[] = {
+    2000000,
+    3000000,
+    4000000,
+    6000000,
+    8000000,
+    12000000,
+    24000000,
+};
+#else
 // UART2 阶梯：3M 为 CH340 规格外档（CH340 规格上限 2M），用 CP210x 交叉验证
 static const u32 baud_rates[] = {
     115200,
@@ -36,8 +49,21 @@ static const u32 baud_rates[] = {
     2000000,
     3000000,
 };
+#endif
 #else
 #define PERIPH_NAME                 "HUART"
+#if SERIAL_MAX_BAUD_TEST_TX_LA_EN
+// TX-LA 梯子：适配器接不住的 2M+ 档 + 回环 PHY 证据范围内的档位
+static const u32 baud_rates[] = {
+    2000000,
+    2500000,
+    3000000,
+    4000000,
+    6000000,
+    8000000,
+    9500000,
+};
+#else
 // HUART 阶梯：9.5M 与回环 PHY 证据对齐（回环 10M 起误码，不设更高档）
 static const u32 baud_rates[] = {
     115200,
@@ -54,6 +80,7 @@ static const u32 baud_rates[] = {
     8000000,
     9500000,
 };
+#endif
 #endif
 
 #define BAUD_CNT            (sizeof(baud_rates) / sizeof(baud_rates[0]))  // 波特率档位数量
@@ -250,14 +277,122 @@ static void verify_and_report(void)
 }
 
 /**
- * @brief 串口最大波特率统一测试入口（阻塞运行，全部档位完成后复位重启）。
+ * @brief TX-LA 模式：从 counter 起填一段连续递增数据并发送。
+ * @param  counter : 流内运行计数（低 8 位即字节值），发送后按实际发出数累加
+ * @return 实际发出的字节数
+ */
+static u32 txla_send_chunk(u32 counter, u32 max_len)
+{
+    u32 chunk = max_len;
+    u32 i;
+
+    if (chunk > SERIAL_MAX_BAUD_TEST_BLK_SIZE) {
+        chunk = SERIAL_MAX_BAUD_TEST_BLK_SIZE;
+    }
+    for (i = 0; i < chunk; i++) {
+        sm_blk[i] = (u8)((counter + i) & 0xFF);
+    }
+
+#if SERIAL_MAX_BAUD_TEST_USE_UART2
+    u16 written = bsp_uart2_com_write(sm_blk, (u16)chunk);
+
+    bsp_uart2_com_process();
+    return written;
+#else
+    u32 wait_start;
+
+    sm_tx_done = 0;
+    huart_tx(sm_blk, (u16)chunk);
+    wait_start = tick_get();
+    while (!sm_tx_done && !tick_check_expire(wait_start, 100)) {
+    }
+    return chunk;
+#endif
+}
+
+/**
+ * @brief TX-LA 模式主循环（死循环）：每档打印提示后静默窗口（给 PC 启动 LA 采集），
+ *        再连续发送递增码流，逐档循环供逻辑分析仪解码验证 TX 线。
+ */
+static void serial_max_baud_test_txla_loop(void)
+{
+    u8 baud_idx;
+    u32 tx_bytes;
+
+    printf("\n=== Serial Max Baud Test (%s) TX-LA Mode ===\n", PERIPH_NAME);
+
+    while (1) {
+        for (baud_idx = 0; baud_idx < BAUD_CNT; baud_idx++) {
+            periph_init(baud_rates[baud_idx]);
+            delay_ms(10);
+            printf("[TXLA][Baud %lu] arm in %dms\n",
+                   baud_rates[baud_idx], SERIAL_MAX_BAUD_TEST_TX_LA_GAP_MS);
+            delay_ms(SERIAL_MAX_BAUD_TEST_TX_LA_GAP_MS);
+            printf("[TXLA][Baud %lu] tx start\n", baud_rates[baud_idx]);
+
+            {
+                u32 start = tick_get();
+                u32 counter = 0;
+
+                tx_bytes = 0;
+                while (!tick_check_expire(start, SERIAL_MAX_BAUD_TEST_TX_LA_MS)) {
+                    tx_bytes += txla_send_chunk(counter, SERIAL_MAX_BAUD_TEST_BLK_SIZE);
+                    counter += SERIAL_MAX_BAUD_TEST_BLK_SIZE;
+                }
+#if SERIAL_MAX_BAUD_TEST_USE_UART2
+                {
+                    u32 wait_start = tick_get();
+
+                    while (!bsp_uart2_com_tx_idle() &&
+                           !tick_check_expire(wait_start, 1000)) {
+                        bsp_uart2_com_process();
+                    }
+                }
+#else
+                {
+                    u32 wait_start = tick_get();
+
+                    while (!sm_tx_done && !tick_check_expire(wait_start, 100)) {
+                    }
+                }
+#endif
+            }
+
+            printf("[TXLA][Baud %lu] tx done (%lu bytes)\n",
+                   baud_rates[baud_idx], tx_bytes);
+        }
+    }
+}
+
+static void serial_max_baud_test_echo_ladder(void);
+
+/**
+ * @brief 串口最大波特率统一测试入口。
+ * @note  默认走回传法梯子（全部档位完成后复位重启）；TX-LA 模式为死循环，
+ *        逐档自发递增码流供逻辑分析仪采集，复位退出。
  */
 void serial_max_baud_test_start(void)
 {
-    u8 baud_idx;
-
     WDT_DIS();
     RTC_WDT_DIS();
+
+#if SERIAL_MAX_BAUD_TEST_TX_LA_EN
+    serial_max_baud_test_txla_loop();
+#else
+    serial_max_baud_test_echo_ladder();
+#endif
+
+    WDT_CLR();
+    WDT_EN();
+    RTC_WDT_EN();
+}
+
+/**
+ * @brief 回传法梯子：PC 发码流 -> 板端校验（RX 真值）-> 重建回传（TX 判定）-> 自动爬梯。
+ */
+static void serial_max_baud_test_echo_ladder(void)
+{
+    u8 baud_idx;
 
     printf("\n=== Serial Max Baud Test (%s) Start ===\n", PERIPH_NAME);
     printf("[t] enter ladder, wdt off\n");
@@ -303,10 +438,6 @@ void serial_max_baud_test_start(void)
     }
 
     printf("\n=== Serial Max Baud Test Done ===\n");
-
-    WDT_CLR();
-    WDT_EN();
-    RTC_WDT_EN();
 }
 
 #endif /* SERIAL_MAX_BAUD_TEST_EN */

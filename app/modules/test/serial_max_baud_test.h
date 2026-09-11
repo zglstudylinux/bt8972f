@@ -40,4 +40,21 @@
 // 启动统一最大波特率测试（阻塞运行，全部档位完成后复位重启）
 void serial_max_baud_test_start(void);
 
+// TX-LA 专用模式：不依赖适配器输入，板子在梯子上循环自发递增码流，
+// 逻辑分析仪直接解码 TX 线验证（用于适配器接不住的 2M+ 档位验收）。
+// 1=启用后 start() 走 TXLA 死循环（每档：提示 -> 1.5s 静默 -> 3s 连续发送）
+#ifndef SERIAL_MAX_BAUD_TEST_TX_LA_EN
+#define SERIAL_MAX_BAUD_TEST_TX_LA_EN        0
+#endif
+
+// TX-LA 每档连续发送时长
+#ifndef SERIAL_MAX_BAUD_TEST_TX_LA_MS
+#define SERIAL_MAX_BAUD_TEST_TX_LA_MS        3000
+#endif
+
+// TX-LA 每档发送前的静默窗口（PC 收到 arm 提示后用该窗口启动 LA 采集）
+#ifndef SERIAL_MAX_BAUD_TEST_TX_LA_GAP_MS
+#define SERIAL_MAX_BAUD_TEST_TX_LA_GAP_MS    1500
+#endif
+
 #endif // __SERIAL_MAX_BAUD_TEST_H
