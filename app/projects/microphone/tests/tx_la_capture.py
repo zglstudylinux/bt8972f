@@ -24,9 +24,9 @@ import la_check_inc                              # noqa: E402
 
 ARM_RE_TMPL = r"\[TXLA\]\[Baud (\d+)\] arm in"
 # 传输安全策略：单次采集 <=~58M 样点（原代 Logic USB 上限 ~60M）。
-# 板子 arm 后 1.5s 才开始 3s TX：延迟 1.8s 启动采集（TX 已开始 0.3s），抓 2.4s 纯 TX。
+# 板子 arm 后 1.5s 才开始 3s TX：延迟 1.8s 启动采集（TX 已开始 0.3s），抓 2.0s 纯 TX。
 START_DELAY_S = 1.8
-DUR_S = 2.4
+DUR_S = 2.0
 
 
 def sample_rate_for(baud):
