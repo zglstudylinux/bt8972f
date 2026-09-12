@@ -277,37 +277,54 @@ static void verify_and_report(void)
 }
 
 /**
- * @brief TX-LA 模式：从 counter 起填一段连续递增数据并发送。
- * @param  counter : 流内运行计数（低 8 位即字节值），发送后按实际发出数累加
- * @return 实际发出的字节数
+ * @brief TX-LA 模式：把回传缓冲预填为连续递增码流（长度取 256 整除，循环发送无缝）。
  */
-static u32 txla_send_chunk(u32 counter, u32 max_len)
+#define TXLA_WRAP_LEN   (SERIAL_MAX_BAUD_TEST_BUF_SIZE - (SERIAL_MAX_BAUD_TEST_BUF_SIZE % 256))
+
+static u32 txla_pos = 0;    // 流内发送位置
+
+static void txla_fill_stream(void)
 {
-    u32 chunk = max_len;
     u32 i;
 
-    if (chunk > SERIAL_MAX_BAUD_TEST_BLK_SIZE) {
-        chunk = SERIAL_MAX_BAUD_TEST_BLK_SIZE;
+    for (i = 0; i < TXLA_WRAP_LEN; i++) {
+        sm_buf[i] = (u8)(i & 0xFF);
     }
-    for (i = 0; i < chunk; i++) {
-        sm_blk[i] = (u8)((counter + i) & 0xFF);
+    txla_pos = 0;
+}
+
+/**
+ * @brief TX-LA 模式：从预填码流中取一段发送（UART2 受环形队列限制按实际入队计数）。
+ * @param  max_len : 单次最大块长
+ * @return 实际发出的字节数
+ */
+static u32 txla_send_chunk(u32 max_len)
+{
+    u32 off = txla_pos % TXLA_WRAP_LEN;
+    u32 chunk = TXLA_WRAP_LEN - off;
+    u32 sent;
+
+    if (chunk > max_len) {
+        chunk = max_len;
     }
 
 #if SERIAL_MAX_BAUD_TEST_USE_UART2
-    u16 written = bsp_uart2_com_write(sm_blk, (u16)chunk);
+    u16 written = bsp_uart2_com_write(&sm_buf[off], (u16)chunk);
 
-    bsp_uart2_com_process();
-    return written;
+    sent = written;
 #else
     u32 wait_start;
 
     sm_tx_done = 0;
-    huart_tx(sm_blk, (u16)chunk);
+    huart_tx(&sm_buf[off], (u16)chunk);
     wait_start = tick_get();
     while (!sm_tx_done && !tick_check_expire(wait_start, 100)) {
     }
-    return chunk;
+    sent = chunk;
 #endif
+
+    txla_pos += sent;
+    return sent;
 }
 
 /**
@@ -319,6 +336,7 @@ static void serial_max_baud_test_txla_loop(void)
     u8 baud_idx;
     u32 tx_bytes;
 
+    txla_fill_stream();
     printf("\n=== Serial Max Baud Test (%s) TX-LA Mode ===\n", PERIPH_NAME);
 
     while (1) {
@@ -332,23 +350,23 @@ static void serial_max_baud_test_txla_loop(void)
 
             {
                 u32 start = tick_get();
-                u32 counter = 0;
 
                 tx_bytes = 0;
                 while (!tick_check_expire(start, SERIAL_MAX_BAUD_TEST_TX_LA_MS)) {
-                    tx_bytes += txla_send_chunk(counter, SERIAL_MAX_BAUD_TEST_BLK_SIZE);
-                    counter += SERIAL_MAX_BAUD_TEST_BLK_SIZE;
-                }
+                    tx_bytes += txla_send_chunk(SERIAL_MAX_BAUD_TEST_BLK_SIZE);
 #if SERIAL_MAX_BAUD_TEST_USE_UART2
-                {
-                    u32 wait_start = tick_get();
+                    // 泵空环形队列再取下一段，尽量贴近线上速率
+                    {
+                        u32 guard = tick_get();
 
-                    while (!bsp_uart2_com_tx_idle() &&
-                           !tick_check_expire(wait_start, 1000)) {
-                        bsp_uart2_com_process();
+                        while (!bsp_uart2_com_tx_idle() &&
+                               !tick_check_expire(guard, 100)) {
+                            bsp_uart2_com_process();
+                        }
                     }
+#endif
                 }
-#else
+#if !SERIAL_MAX_BAUD_TEST_USE_UART2
                 {
                     u32 wait_start = tick_get();
 

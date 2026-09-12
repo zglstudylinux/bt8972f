@@ -7,6 +7,8 @@
 | 脚本 | 用途 | 依赖 |
 |---|---|---|
 | `serial_max_baud_test.py` | **普通/高速串口最大波特率统一测试编排**：监听 COM9 板端提示自动换档换波特率，每档收发比对并实时输出结果表（UART2/HUART、CH340/CP210x 参数化） | Python 3 + pyserial |
+| `tx_la_capture.py` | **TX-LA 逐档采集编排**：配套固件 `SERIAL_MAX_BAUD_TEST_TX_LA_EN=1`，盯 COM9 arm 提示自动启停 Logic 采集→解码导出（采样率按波特率自动取舍，规避原代 Logic USB 传输上限） | Python 3 + pyserial |
+| `la_check_inc.py` | TX-LA 解码 CSV 递增连续性校验：零断裂=板端 TX 位级无误码；断裂按时间差分类丢字节/位级误码 | Python 3 标准库 |
 | `test-uart2-tx.ps1` | TX 板测校验：固件 `UART2_COM_TX_TEST_EN=1` 每 100ms 发 72 字节测试帧（`55 AA 5A A5`+序号+payload+CRC16），本脚本逐帧校验并统计丢帧 | PowerShell + .NET SerialPort |
 | `test-uart2.ps1` | RX 板测校验：固件 `UART2_COM_RX_TEST_EN=1` 原样回显，本脚本发送特殊字节/全字节/突发等用例并逐字节比对 | PowerShell + .NET SerialPort |
 | `huart_serial_echo.py` | HUART 双机回传板测：PC 发 `huart_dual_inc.bin`（50 760 字节递增码流）→ 固件 `HUART_BAUD_TEST_EN=1` 回传 → 逐字节比对打 PASS/FAIL | Python 3 + pyserial |
