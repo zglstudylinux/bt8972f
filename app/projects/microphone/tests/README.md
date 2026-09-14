@@ -85,6 +85,15 @@ python tests/la_validate_frames.py C:/tmp/cap.csv
 - 逻辑分析仪判定 ≥8M 信号时必须与主机侧交叉验证——LA 探头电容+地环路在 8M 产生过观测伪影（详见 huart_tx_bringup.md 第 3.2 节）；
 - 长时间采集（>7s @24MS/s）Logic 设备可能 USB ReadTimeout 导致采样流缺失、解码出现成簇坏帧，应缩短单次采集时长。
 
+### 串口板内帧回环/自回环（huart_baud_test + serial_max_baud_test，2026-09-14）
+
+- **HUART 帧式回环**：见下节，PE7↔PB1 短接，9.5M 加压 2.56MB 零误码、10M 起误码；
+- **UART2 双线回环**：`SERIAL_MAX_BAUD_TEST_EN=1` + `USE_UART2=1` + `LOOPBACK_EN=1`
+  （探针宏 `UART2_PROBE_EN` 保持 0），PE7↔PB1 短接，32KB/档自发自收。
+  **要求驱动为修复版**：`bsp_uart2_com.c` 需 ONELINE=0（双线）+ TX 脚输出方向 +
+  key 三域 0x555 全关——单线模板配置下自回环全零（根因分析见
+  serial_max_baud_test_plan.md 项 2B）。实测 115200~12M 全 PASS、24M 字节全到但误码。
+
 ### HUART 帧式板内回环（`huart_baud_test`，2026-09-14）
 
 用途是验证无适配器的 HUART 单块帧 PHY 链路，不能替代上节的 PC↔板 50KB 连续回传。

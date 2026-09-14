@@ -598,13 +598,22 @@ static void uart2_self_suppress_probe(void)
     printf("[U2PROBE][GPIO] seen=%d data=%02x first=%lu con=%08x pe7(low=%lu tog=%lu)\n",
            seen, data, first_idx, first_con, pe7_low, pe7_tog);
 
-    // 被测组 A：ONELINE=0（TX/RX separate）+ UART2 自己发
+    // 被测组 A：ONELINE=0（TX/RX separate）+ UART2 自己发。
+    // 手册 12.3 User Guide 第 1 步 "Set IO in the correct direction"：v3 实测
+    // separate 模式下 TX 脚为输入方向时 pad 不驱动（单线模式外设自控方向不受限），
+    // 本组把 TX 脚改为输出方向验证。
     FUNCMCON2 = mux_saved;
     GPIOEFEN |= BIT(7);
-    GPIOEDIR |= BIT(7);
+    GPIOEDIR &= ~BIT(7);            // TX 脚输出方向
     uart2_probe_manual_init(0);
     delay_ms(2);
-    uart2_probe_poll_tx_rx("U-SEP");
+    uart2_probe_poll_tx_rx("U-SEP-OUT");
+
+    // 对照组 A'：同配置但 TX 脚输入方向（复现 v3 的 pad 平直现象）
+    UART2CPND = BIT(15) | BIT(11) | BIT(10) | BIT(9) | BIT(8);
+    GPIOEDIR |= BIT(7);
+    delay_ms(2);
+    uart2_probe_poll_tx_rx("U-SEP-IN");
 
     // 被测组 B：ONELINE=1（one-line）同流程，同轮 A/B
     uart2_probe_manual_init(1);
