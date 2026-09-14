@@ -320,28 +320,51 @@ TX 方向与 RX 实收内容解耦；对应脚本 TX 判定改为"回传内容�
 
 **结论**：本工程 HUART 的 PE7(TX)↔PB1(RX) 板内单块帧回环最大无错档为 **9.5 Mbps**；10M 是实测误码边界。该结果与同事工程 PB4↔PB3 的历史 9.5M/10M 边界一致，且本工程实际引脚已直接验证，无需切 PB4↔PB3 fallback。
 
-## 项 2B：UART2 同实例短接回环适用性（PE7↔PB1，2026-09-14）
+## 项 2B：UART2 同实例短接回环适用性（PE7↔PB1，2026-09-14，v3 终局）
 
 UART2 用同一根已通过 HUART 9.5M 加压的短接线跑 115200~24M，全部为
-`got=0 / hw_pending=0`。这**不是 UART2 波特率上限为 0**，而是普通 UART2 在自身发送时
-不产生 RX 完成事件，因而该外设不能用“TX 短接 RX、自发自收”方法测最大波特率。
+`got=0 / hw_pending=0`。为定位根因做了三轮寄存器级探针（每组自动复位重复 5~10 轮
+完全一致），并取得原厂手册 Register 12-1/12-2/12-3 全表后按位重配复测：
 
-为排除脚本与物理线变量，在 115200 下做了单字节 A/B（每组自动复位重复 6~10 轮一致）：
+**探针方法**：115200、单字节 0x55、PE7↔PB1 短接。三组同轮对比——
+GPIO bitbang 正对照（PE7 由 GPIO 发标准 UART 帧，UART2 只负责收）、
+ONELINE=0 双线自发、ONELINE=1 单线自发；发送紧循环中同时采样 TXPND/RXPND/
+RX_BCNT[14:11]/RX_4BUF_ERROR 与 PE7/PB1 的 GPIO 电平。
 
-| 发送源 | UART2 TX complete | UART2 RX BIT9 | 判定 |
-| --- | --- | --- | --- |
-| GPIO bitbang PE7 → PB1（UART2 仅负责 RX） | — | **seen=1** | 短接与 PB1 RX 事件路径有效 |
-| UART2DATA → PE7 → PB1（原配置 BIT6=1） | **bit8=121** | **从未置位** | UART2 自身发送正常，但 RX 被抑制 |
-| UART2DATA，清原厂注释为 `One line` 的 BIT6 | **bit8=121** | **从未置位** | 清 BIT6 也不能打开同实例自回环 |
+**手册核对修正**：CON 高 16 位不是"KEY 魔法值"而是三个功能域 KEYIE/KEYEN/RSTEN
+（写 0xa 使能、0x5 关闭）；原厂模板的 `0xaaa` 等于把三个 key 检测功能全开，
+探针已改为 0x555 全关。BAUD 仅低 16 位是分频（Baud=Fudet/(BAUD+1)），
+高 16 位 DARTBAUD 只读。RX 有 4 字节硬件缓冲（RX_BCNT）+ 溢出标志 RX_4BUF_ERROR。
 
-> GPIO 软件码流解得 `0xCB` 而非目标 `0x55`，原因是 `delay_us(9)` 位宽量化；本探针只用
-> `BIT9 seen=1` 证明物理短接与 RX 事件路径，字节值不参与性能判定。
+**三轮结果（结论逐轮收敛）**：
 
-**结论与测试口径**：普通 UART2 的同实例 TX/RX 在当前公开寄存器配置下呈 one-line/半双工自抑制行为；
-PE7/PB1 即使是独立映射脚，UART2 TX active 仍屏蔽 RX。SDK/PDF 未公开可用的全双工使能位，
-所以 UART2 最大 TX/RX 波特率继续沿用“PC 适配器分方向 + LA TX 线级”的统一法结果，不能拿
-板内短接回环 FAIL 误判 UART2 性能。若必须做无适配器闭环，需要第二颗 MCU/另一独立 UART 实例，
-而不是同一个 UART2 自回环。
+| 轮次 | 配置 | 现象 |
+| --- | --- | --- |
+| v1 | 驱动原配（ONELINE=1），运行中清 BIT6 | 自发时 RXPND 从不置位；GPIO 对照组 seen=1 |
+| v2 | 按手册从头初始化：ONELINE=0/1 两组、key 域全关（0x5）、只写 BAUD 低 16 位 | 两组 TXPND 均正常完成（≈87µs），RXPND 与 RX_BCNT 全程为 0，RX_4BUF_ERROR=0 |
+| v3 | v2 + 发送期间 GPIO 采样 PE7/PB1 pad 电平 | 见下 |
+
+**v3 关键数据（定性证据）**：
+
+| 模式 | TXPND | PE7/PB1 pad 采样 | RXPND/RX_BCNT | 定性 |
+| --- | --- | --- | --- | --- |
+| GPIO bitbang | — | pe7 tog=7（随码流翻转） | **seen=1** | 短接、PB1 pad、RX 事件路径全部有效 |
+| ONELINE=0（TX/RX separate） | 完成（done=50） | **pe7/pb1 全程平直（0 翻转）** | 全 0 | **双线模式下 TX 输出根本没到达 pad**，wire 静默，无物可收 |
+| ONELINE=1（one line） | 完成（done=50） | **pb1 采样到完整 0x55 帧（恰 10 次边沿=start+8 数据位+stop）** | 全 0 | **TX 波形已上线，但 RX 引擎在自身发送期间被硬件门控**——单线半双工的设计行为 |
+
+> 附带发现：function 模式下 PE7 的 GPIO 读回不可信（与短接网络上可信的 PB1 读数矛盾：
+> 同一电气节点上 PE7 读出"恒低 50 拍/2 翻转"而 PB1 读出 10 边沿完整帧）；PB1 读数经
+> 0x55 帧边沿精确匹配验证可信。排查此类问题应以可靠一侧的 pad 采样或 LA 为准。
+
+**结论与测试口径（v3 定局）**：
+1. ONELINE=1 是单线半双工：TX 波形上线、发送期间 RX 被门控——自发自收被设计禁止；
+2. ONELINE=0 双线模式下 TX 输出不达 pad（TX2-G1=PE7 映射下实测），wire 静默；
+3. 因此普通 UART2 同实例短接回环在手册寄存器范围内**不可实现**，全零结果**不代表
+   UART2 波特率上限为 0**。UART2 的 TX/RX 上限继续沿用"PC 适配器分方向 + LA 线级"
+   统一法结果（RX 460800、TX 位级 6M 零断裂）；
+4. 待原厂确认的问题收敛为两条：① ONELINE=0 双线模式下 TX 如何输出到 pad
+   （TX2-G1 映射 + CON=0x100001b1 实测 TXPND 完成而 pad 无波形）；② 普通 UART
+   是否存在受支持的内部 loopback 自检位。
 
 
 ## 项 3：LA 线级验证（按需，用于 §2.4 归因）

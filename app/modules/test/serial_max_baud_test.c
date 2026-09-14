@@ -429,6 +429,18 @@ static void serial_max_baud_test_txla_loop(void)
 #if SERIAL_MAX_BAUD_TEST_LOOPBACK_EN && SERIAL_MAX_BAUD_TEST_USE_UART2 && \
     SERIAL_MAX_BAUD_TEST_UART2_PROBE_EN
 
+/*
+ * UART2 自回环探针 v2（按手册 Register 12-1/12-2/12-3 逐位核对后重写）：
+ *   - CON[27:24]/[23:20]/[19:16] 是 KEYIE/KEYEN/RSTEN 三个功能域，写 0xa 使能、
+ *     0x5 关闭。原厂 UART1 模板的 0xaaa 是把三个 key 检测功能全开，探针全关。
+ *   - ONELINE(bit6)=0 为 TX/RX separate；RXEN(bit7)=1；FIXBAUD(5)、SB2EN(4)。
+ *   - RXPND=CON[9]、RX_BCNT=CON[14:11]（RX 4 字节缓冲计数）、RX_4BUF_ERROR=[15]。
+ *   - CPND 写 BIT9 = RX 计数减 1；写 DATA 自动清 TXPND。
+ *   - BAUD 只有低 16 位是分频（Baud=Fudet/(BAUD+1)），高 16 位 DARTBAUD 只读。
+ * 三组同轮对比：GPIO 正对照 / ONELINE=0 双线自发 / ONELINE=1 单线自发。
+ */
+#define UART2_PROBE_CON_KEYS_OFF    ((0x5u << 24) | (0x5u << 20) | (0x5u << 16))
+
 static u8 uart2_probe_wait_rx(u32 loops, u32 *first_con, u32 *first_idx, u8 *data)
 {
     u32 i;
@@ -436,7 +448,8 @@ static u8 uart2_probe_wait_rx(u32 loops, u32 *first_con, u32 *first_idx, u8 *dat
     for (i = 0; i < loops; i++) {
         u32 con = UART2CON;
 
-        if (con & BIT(9)) {
+        // RXPND 置位或 RX_BCNT 非零都算收到（手册 bit9 / bit14:11）
+        if ((con & BIT(9)) || ((con >> 11) & 0xf)) {
             *first_con = con;
             *first_idx = i;
             *data = UART2DATA;
@@ -447,12 +460,15 @@ static u8 uart2_probe_wait_rx(u32 loops, u32 *first_con, u32 *first_idx, u8 *dat
     return 0;
 }
 
-static void uart2_probe_bitbang_55(void)
+static void uart2_probe_bitbang_55(u32 *pe7_low, u32 *pe7_tog)
 {
     u8 i;
     u8 data = 0x55;
+    u8 last = 1;
 
-    GPIOECLR = BIT(7);
+    *pe7_low = 0;
+    *pe7_tog = 0;
+    GPIOECLR = BIT(7);              // start
     delay_us(9);
     for (i = 0; i < 8; i++) {
         if (data & BIT(i)) {
@@ -461,90 +477,140 @@ static void uart2_probe_bitbang_55(void)
             GPIOECLR = BIT(7);
         }
         delay_us(9);
+        {
+            u8 now = (GPIOE & BIT(7)) ? 1 : 0;
+
+            if (!now) {
+                (*pe7_low)++;
+            }
+            if (now != last) {
+                (*pe7_tog)++;
+                last = now;
+            }
+        }
     }
-    GPIOESET = BIT(7);
+    GPIOESET = BIT(7);              // 2 stop（SB2EN=1）
     delay_us(18);
+}
+
+static void uart2_probe_manual_init(u8 oneline)
+{
+    u32 con = UART2_PROBE_CON_KEYS_OFF | BIT(7) | BIT(5) | BIT(4);
+
+    if (oneline) {
+        con |= BIT(6);
+    }
+    UART2CON = con & ~BIT(0);       // UTEN=0 下改配置
+    UART2BAUD = (24000000UL / 115200) - 1;   // 手册 12-3：只写低 16 位 BAUD
+    UART2CPND = BIT(15) | BIT(11) | BIT(10) | BIT(9) | BIT(8);
+    UART2CON = con | BIT(0);        // UTEN=1
+}
+
+static void uart2_probe_poll_tx_rx(const char *tag)
+{
+    u32 i;
+    u32 txd_idx = 0xffffffff;       // TXPND 1->0（写 DATA 后开始移位）
+    u32 done_idx = 0xffffffff;      // TXPND 0->1（一字节完成）
+    u32 rxpnd_idx = 0xffffffff;
+    u32 rxpnd_con = 0;
+    u32 bcnt_max = 0;
+    u32 pe7_low = 0;
+    u32 pe7_tog = 0;
+    u32 pb1_low = 0;
+    u32 pb1_tog = 0;
+    u8 rx_data = 0;
+    u8 prev8 = (UART2CON & BIT(8)) ? 1 : 0;
+    u8 pe7_last = (GPIOE & BIT(7)) ? 1 : 0;
+    u8 pb1_last = (GPIOB & BIT(1)) ? 1 : 0;
+
+    UART2DATA = 0x55;
+    for (i = 0; i < 600000; i++) {
+        u32 con = UART2CON;
+        u8 now8 = (con & BIT(8)) ? 1 : 0;
+        u32 bcnt = (con >> 11) & 0xf;
+        u8 pe7_now = (GPIOE & BIT(7)) ? 1 : 0;
+        u8 pb1_now = (GPIOB & BIT(1)) ? 1 : 0;
+
+        if (!pe7_now) {
+            pe7_low++;
+        }
+        if (pe7_now != pe7_last) {
+            pe7_tog++;
+            pe7_last = pe7_now;
+        }
+        if (!pb1_now) {
+            pb1_low++;
+        }
+        if (pb1_now != pb1_last) {
+            pb1_tog++;
+            pb1_last = pb1_now;
+        }
+        if (bcnt > bcnt_max) {
+            bcnt_max = bcnt;
+        }
+        if (prev8 && !now8 && (txd_idx == 0xffffffff)) {
+            txd_idx = i;
+        }
+        if (!prev8 && now8 && (done_idx == 0xffffffff)) {
+            done_idx = i;
+        }
+        if ((rxpnd_idx == 0xffffffff) && (con & BIT(9))) {
+            rxpnd_idx = i;
+            rxpnd_con = con;
+            rx_data = UART2DATA;
+            UART2CPND = BIT(9);
+        }
+        prev8 = now8;
+    }
+    printf("[U2PROBE][%s] txd=%lu done=%lu rxpnd=%lu data=%02x bcnt_max=%lu rx4err=%lu pe7(low=%lu tog=%lu) pb1(low=%lu tog=%lu)\n",
+           tag, txd_idx, done_idx, rxpnd_idx, rx_data, bcnt_max,
+           (UART2CON >> 15) & 1, pe7_low, pe7_tog, pb1_low, pb1_tog);
 }
 
 static void uart2_self_suppress_probe(void)
 {
     u32 mux_saved;
-    u32 con_saved;
     u32 first_con = 0;
     u32 first_idx = 0;
     u8 data = 0;
     u8 seen;
-    u32 i;
-    u32 bit8_idx = 0xffffffff;
-    u32 bit9_idx = 0xffffffff;
-    u32 bit9_con = 0;
-    u8 bit9_data = 0;
 
-    bsp_uart2_com_init(115200);
+    bsp_uart2_com_init(115200);     // 引脚/复用/时钟沿用驱动，CON/BAUD 随后按手册重配
     delay_ms(10);
     mux_saved = FUNCMCON2;
-    con_saved = UART2CON;
-    if (UART2CON & BIT(9)) {
-        data = UART2DATA;
-    }
-    UART2CPND = BIT(8) | BIT(9);
+    UART2CPND = BIT(15) | BIT(11) | BIT(10) | BIT(9) | BIT(8);
+    printf("[U2PROBE] init con=%08x baud=%08x mux=%08x\n",
+           UART2CON, UART2BAUD, FUNCMCON2);
 
-    FUNCMCON2 &= ~(0x0f << 8);       // 保留 RX2->PB1，移除 TX2->PE7
+    // 正对照：ONELINE=0 手册双线配置下，GPIO PE7 发 0x55，UART2 只负责收
+    u32 pe7_low = 0;
+    u32 pe7_tog = 0;
+
+    uart2_probe_manual_init(0);
+    FUNCMCON2 &= ~(0x0f << 8);      // 解除 TX2->PE7，保留 RX2->PB1
     GPIOEDE |= BIT(7);
     GPIOEFEN &= ~BIT(7);
-    GPIOEDIR &= ~BIT(7);             // DIR=0 为 GPIO 输出
+    GPIOEDIR &= ~BIT(7);            // DIR=0 为 GPIO 输出
     GPIOESET = BIT(7);
     delay_us(50);
-    uart2_probe_bitbang_55();
+    uart2_probe_bitbang_55(&pe7_low, &pe7_tog);
     seen = uart2_probe_wait_rx(200000, &first_con, &first_idx, &data);
-    printf("[U2PROBE][GPIO] seen=%d data=%02x first=%lu con=%08x end=%08x mux=%08x\n",
-           seen, data, first_idx, first_con, UART2CON, FUNCMCON2);
+    printf("[U2PROBE][GPIO] seen=%d data=%02x first=%lu con=%08x pe7(low=%lu tog=%lu)\n",
+           seen, data, first_idx, first_con, pe7_low, pe7_tog);
 
+    // 被测组 A：ONELINE=0（TX/RX separate）+ UART2 自己发
     FUNCMCON2 = mux_saved;
     GPIOEFEN |= BIT(7);
     GPIOEDIR |= BIT(7);
-    UART2CON = con_saved;
-    UART2CPND = BIT(8) | BIT(9);
-    UART2DATA = 0x55;
-    for (i = 0; i < 600000; i++) {
-        u32 con = UART2CON;
+    uart2_probe_manual_init(0);
+    delay_ms(2);
+    uart2_probe_poll_tx_rx("U-SEP");
 
-        if ((bit8_idx == 0xffffffff) && (con & BIT(8))) {
-            bit8_idx = i;
-        }
-        if ((bit9_idx == 0xffffffff) && (con & BIT(9))) {
-            bit9_idx = i;
-            bit9_con = con;
-            bit9_data = UART2DATA;
-            UART2CPND = BIT(9);
-        }
-    }
-    printf("[U2PROBE][UART] bit8=%lu bit9=%lu data=%02x con9=%08x end=%08x mux=%08x\n",
-           bit8_idx, bit9_idx, bit9_data, bit9_con, UART2CON, FUNCMCON2);
+    // 被测组 B：ONELINE=1（one-line）同流程，同轮 A/B
+    uart2_probe_manual_init(1);
+    delay_ms(2);
+    uart2_probe_poll_tx_rx("U-1LINE");
 
-    // C：仅清原厂注释为 One line 的 BIT6，验证是否存在双线全双工入口。
-    bit8_idx = 0xffffffff;
-    bit9_idx = 0xffffffff;
-    bit9_con = 0;
-    bit9_data = 0;
-    UART2CON = con_saved & ~BIT(6);
-    UART2CPND = BIT(8) | BIT(9);
-    UART2DATA = 0x55;
-    for (i = 0; i < 600000; i++) {
-        u32 con = UART2CON;
-
-        if ((bit8_idx == 0xffffffff) && (con & BIT(8))) {
-            bit8_idx = i;
-        }
-        if ((bit9_idx == 0xffffffff) && (con & BIT(9))) {
-            bit9_idx = i;
-            bit9_con = con;
-            bit9_data = UART2DATA;
-            UART2CPND = BIT(9);
-        }
-    }
-    printf("[U2PROBE][U-NO6] bit8=%lu bit9=%lu data=%02x con9=%08x end=%08x mux=%08x\n",
-           bit8_idx, bit9_idx, bit9_data, bit9_con, UART2CON, FUNCMCON2);
     printf("=== UART2 Self Suppress Probe Done ===\n");
 }
 

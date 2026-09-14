@@ -34,11 +34,22 @@
 #define USB_SD_UPDATE_EN                0                       //是否支持UDISK/SD的离线升级
 #define GUI_SELECT                      GUI_NO                  //GUI Display Select
 #define UART0_PRINTF_SEL                PRINTF_PB3              //选择UART打印信息输出IO，或关闭打印信息输出（uart0为调试专用口，1.5M固定）
-#define UART2_COM_EN                    1                       //使能UART2普通串口(TX=PE7,RX=PB1)，见手册5.6.4
-#define UART2_COM_BAUD                  115200                  //UART2波特率，当前时钟源为24MHz XOSC
+#define SERIAL_MAX_BAUD_TEST_EN         0                       //统一最大波特率测试(普通/高速串口二选一，见下宏)，与 HUART_BAUD_TEST_EN 互斥；用法见 docs/peripheral/serial_max_baud_test_plan.md
+#define SERIAL_MAX_BAUD_TEST_USE_UART2  1                       //被测外设：1=UART2普通串口(需 UART2_COM_EN=1) 0=HUART高速串口(需 UART2_COM_EN=0)
+#define SERIAL_MAX_BAUD_TEST_TX_LA_EN   1                       //TX-LA 模式：自发递增码流循环供逻辑分析仪解码(2M+ 档适配器验收)
+#define SERIAL_MAX_BAUD_TEST_LOOPBACK_EN 0                      //回环模式：板内 TX 短接 RX 自发自收(无适配器)，测板自身收发链路最大无错波特率
+#define SERIAL_MAX_BAUD_TEST_UART2_PROBE_EN 0                   //UART2 自回环探针 v2：手册双线配置 + key 域全关 + BCNT 观测
+#define UART2_COM_EN                    1                       //使能UART2普通串口(TX=PE7,RX=PB1)，见手册5.6.4；与HUART_BAUD_TEST/HUART_COM共用接线，互斥
+#define UART2_COM_BAUD                  3000000                  //UART2波特率，当前时钟源为24MHz XOSC
 #define UART2_COM_RX_TEST_EN            0                       //RX板测模式：UART2原样回显，诊断只输出到UART0
 #define UART2_COM_TX_TEST_EN            0                       //TX板测模式：周期发送带序号和CRC16的二进制帧
 #define UART2_COM_RX_IRQ_TEST_EN        0                       //实验性共享IRQ14；实测无间隔流更差，默认禁用
+#define HUART_BAUD_TEST_EN              0                       //HUART 帧式回环/双机回传压力测试；测试期间需关闭 EQ/UART2/HUART_COM
+#define HUART_COM_EN                    0                       //使能HUART高速串口测试口(TX=PE7,RX=PB1)，DMA+回调，见api_uart.h；与UART2_COM_EN、EQ_DBG_IN_UART、HUART_BAUD_TEST_EN互斥(单外设)
+#define HUART_COM_BAUD                  8000000                 //HUART波特率，实测可靠上限8M；12M起TX引擎underrun（线级证据见huart_tx_bringup.md）
+#define HUART_COM_RX_TEST_EN            0                       //RX板测模式：收到的数据原样回发，诊断只输出到UART0
+#define HUART_COM_TX_TEST_EN            0                       //TX板测模式：周期发送带序号和CRC16的二进制帧(与UART2帧格式一致)
+#define HUART_COM_BLOCK_SIZE            512                     //HUART DMA接收块长(字节)，即rx回调粒度；需>=单次突发长度，避免回显TX与RX并发冲突
 #define PWRON_ENTER_BTMODE_EN           0                       //是否上电默认进蓝牙模式
 #define SLEEP_DAC_OFF_EN                (is_sleep_dac_off_enable()) //sfunc_sleep是否关闭DAC， 复用MICL检测方案不能关DAC。
 #define SYS_VDDIO_LP_EN                 1                       //休眠模式是否打开切换VDDIO功能（省电，可能会影响VDDIO供电的外设）
@@ -412,7 +423,7 @@
 * Module    : EQ和ANC配置
 ******************************************************************************/
 #define EQ_MODE_EN                      0           //是否调节EQ MODE (POP, Rock, Jazz, Classic, Country)
-#define EQ_DBG_IN_UART                  1           //是否使能UART在线调节EQ
+#define EQ_DBG_IN_UART                  1           //是否使能UART在线调节EQ；SERIAL_MAX_BAUD_TEST/HUART_BAUD_TEST/HUART_COM 测试期间需临时置0(避免污染COM9调试口)
 #define EQ_DBG_IN_UART_VUSB_EN          0           //打开vusb在线调EQ的功能，vusb使用dma方式，默认波特率1.5M,打开智能仓或快测功能时波特率为9600
 #define EQ_DBG_IN_SPP                   1           //是否使能SPP在线调节EQ
 
