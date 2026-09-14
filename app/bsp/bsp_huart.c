@@ -3,17 +3,30 @@
 
 #if (HUART_EN || TBOX_TEST_EN) && (!ADAPTER_HUART_INPUT_EN)
 
+WEAK u8 huart_baud_test_rx_done_cb(void)
+{
+    return 0;
+}
+
+WEAK void huart_baud_test_tx_done_hook(void)
+{
+}
+
 AT(.com_huart.text)
 void huart_tx_done_cb(void)
 {
 #if BT_SCO_DUMP_TX_EN || ANC_SW_DUMP_EN
     pcm_dump_tx_done();
 #endif
+    huart_baud_test_tx_done_hook();
 }
 
 AT(.com_huart.text)
 void huart_rx_done_cb(void)
 {
+    if (huart_baud_test_rx_done_cb()) {
+        return;
+    }
 
 #if TBOX_TEST_EN
     if(vusb_test_huart_done()) {

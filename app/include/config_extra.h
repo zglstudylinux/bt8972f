@@ -124,6 +124,7 @@
 #if (CHARGE_BOX_INTF_SEL == INTF_HUART) ||  \
     (TEST_INTF_SEL == INTF_HUART) ||        \
     EQ_DBG_IN_UART ||                       \
+    HUART_BAUD_TEST_EN ||                   \
     BT_SCO_DUMP_TX_EN ||                    \
     QTEST_EN ||                             \
     ANC_TOOL_EN

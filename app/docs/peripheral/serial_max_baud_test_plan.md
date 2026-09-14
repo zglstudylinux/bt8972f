@@ -109,7 +109,7 @@ sequenceDiagram
 
 ## 3.2 引脚与接线
 
-**UART2 与 HUART 共用引脚**，所以四个测试项接线完全相同，换测项只换固件不动线：
+**UART2 与 HUART 对外回传测试共用引脚**，所以四个对外测试项接线完全相同，换测项只换固件不动线：
 
 | 信号 | 板端引脚 | 接适配器 |
 | --- | --- | --- |
@@ -119,10 +119,21 @@ sequenceDiagram
 
 调试口 COM9（PB3，1.5M）全程保持连接，脚本靠它同步。
 
+**HUART 板内帧回环（2026-09-14 新增）**：断开数据适配器的 TX/RX 两根线，
+用杜邦线直接短接 **PE7（HUART TX）↔ PB1（HUART RX）**；COM9 仍接 PB3，
+其 TX 悬空。该接法验证芯片板内单块帧链路，不经过适配器。PB4↔PB3 是仅在
+PE7↔PB1 失败时才启用的 fallback；启用 fallback 必须把 UART0 调试从 PB3 迁走，
+避免 PB3 被双重复用。
+
 > 电平均为 3.3V。COM 口号以设备管理器为准（历史登记：COM9=调试 / COM17=CH340 /
 > COM6、COM19=CP210x）；可用 `python serial_max_baud_test.py --data-com list` 枚举。
 
-# 4 固件构建态（config.h 改动不入库）
+# 4 固件构建态（唯一 `app.dcf` 工作流）
+
+所有测试都只烧录 `projects/microphone/Output/bin/app.dcf`。通过修改 `config.h`、
+重建同一个文件来切换测试内容；不创建或保留按测试项命名的 dcf 副本。
+
+## 4.1 对外统一回传构建态
 
 测试模块由两个宏控制（`config.h`）：
 
@@ -134,13 +145,27 @@ sequenceDiagram
 | `EQ_DBG_IN_UART` | 0 | 0 |
 | `HUART_BAUD_TEST_EN` / `HUART_COM_EN` | 0 | 0 |
 
-- 波特率阶梯写在固件里：UART2 = 115200~3M 共 8 档；HUART = 115200~9.5M 共 13 档
-  （9.5M 与回环 PHY 证据对齐，回环 10M 起误码，见 §7）。
-- 预编译产物（`Output/bin/`，不入库）：
-  - **`app_uart2_test.dcf`** —— 项 1 用
-  - **`app_huart_test.dcf`** —— 项 2 用
-- 需要重编：改好 config.h 后在 `projects/microphone` 下执行
+- 波特率阶梯写在固件里：UART2 = 115200~3M 共 8 档；HUART = 115200~9.5M 共 13 档。
+- 改好 config.h 后在 `projects/microphone` 下执行：
   `powershell -ExecutionPolicy Bypass -File build.ps1 -Rebuild`。
+
+## 4.2 HUART 板内帧回环构建态
+
+本工程 `modules/test/huart_baud_test.c` 已迁移同事的帧式回环方案：每帧 TX/RX 都是
+**独立 512B DMA 缓冲**，确保 RX done 对应完整帧；五种码型为 `00 / FF / 55 / AA / 递增`，
+每帧均逐字节比较。筛选态每码型 100 帧；最高 PASS 档加压态每码型 1000 帧。
+
+| 宏 | PE7↔PB1 首选回环态 |
+| --- | --- |
+| `SERIAL_MAX_BAUD_TEST_EN` | 0 |
+| `HUART_BAUD_TEST_EN` | 1 |
+| `HUART_BAUD_TEST_MODE` | `HUART_BAUD_TEST_MODE_LOOPBACK` |
+| `HUART_BAUD_TEST_PINSET` | `HUART_BAUD_TEST_PINSET_PE7_PB1` |
+| `HUART_BAUD_TEST_FRAMES` | 100（筛选）/ 1000（加压） |
+| `UART2_COM_EN` / `HUART_COM_EN` / `EQ_DBG_IN_UART` | 0 / 0 / 0 |
+
+每帧最长等待 200ms；连续 8 帧超时后自动终止该码型，失败档不会卡死。回环筛选梯子
+是 1.5M、2M、2.5M、3M、4M、6M、8M、9M、9.5M、10M。
 
 # 5 测试项（逐项执行）
 
@@ -148,7 +173,7 @@ sequenceDiagram
 
 1. 接线按 §3.2，确认共地。
 2. 设备管理器确认三个 COM 口：调试口（COM9）、CH340、CP210x。
-3. 烧录 `app_uart2_test.dcf`，复位后 COM9 终端（1.5M）应打印：
+3. 烧录当次重建的唯一 `Output/bin/app.dcf`，复位后 COM9 终端（1.5M）应打印：
    ```
    === Serial Max Baud Test (UART2) Start ===
    [Baud 115200] waiting PC data...
@@ -161,7 +186,7 @@ sequenceDiagram
 > 再看 COM9 启动日志里是否有 `LVD reset`。固件横幅后的 `[t] enter ladder` /
 > `[t] uart2 init ...` 调试打印可用于定位挂点。
 
-## 项 1：UART2-RX + UART2-TX（烧 `app_uart2_test.dcf`，一次跑完两个方向）
+## 项 1：UART2-RX + UART2-TX（UART2 回传构建态的 `app.dcf`，一次跑完两个方向）
 
 1. 接线：CH340 按 §3.2 接 PE7/PB1/GND。
 2. 启动脚本（**先启脚本，再按板子复位**，保证脚本不错过首条提示）：
@@ -184,7 +209,7 @@ sequenceDiagram
    - 中间档两边都 PASS 才算数。
 6. 填结果表（模板见项 4）。
 
-**UART2 结果表（CH340，2026-09-11 实测，固件 app_uart2_test.dcf，码流 50760B，节流 64B/8ms）**：
+**UART2 结果表（CH340，2026-09-11 实测，UART2 回传构建态 `app.dcf`，码流 50760B，节流 64B/8ms）**：
 
 | 波特率 | 板端 got | 板端 err | drop | 回传比对 | RX判定 | TX判定 | 归因 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -223,9 +248,9 @@ TX 方向与 RX 实收内容解耦；对应脚本 TX 判定改为"回传内容�
 - **TX 实测最大无错档 ≥1.5M**（921600/1M/1.5M 三档双适配器回传零差异；2M 及以上受适配器接收能力所限本次无法验收，可后续用 LA 线级验证扩展——历史帧测已证 TX 信号完整性达 24M，见 uart2_tx_bringup.md §7）；
 - TX 有效吞吐 ~28.6KB/s 与波特率无关（驱动结构，见 uart2_huart_compare.md §2），汇报时与"波特率上限"分两层说。
 
-## 项 2：HUART-RX + HUART-TX（烧 `app_huart_test.dcf`，接线不变）
+## 项 2：HUART-RX + HUART-TX（HUART 回传构建态的 `app.dcf`，接线不变）
 
-1. 重新烧录 `app_huart_test.dcf`，**接线不动**（两外设共用 PE7/PB1）。
+1. 将 config 切到 HUART 回传构建态并重新烧录唯一 `app.dcf`，**接线不动**（两外设共用 PE7/PB1）。
 2. 先跑 CH340 主力：
    ```bash
    python serial_max_baud_test.py --debug-com COM9 --data-com COM17 --periph huart --adapter ch340
@@ -242,7 +267,7 @@ TX 方向与 RX 实收内容解耦；对应脚本 TX 判定改为"回传内容�
    - >3M：适配器 TX 超规格，板端 FAIL 时按 §2.4 用 LA 归因，不能直接判板子不行。
 6. 填结果表（模板同项 1，行换成 13 档）。
 
-**HUART 结果表（CH340，2026-09-11 实测，固件 app_huart_test.dcf，码流 50760B，节流 512B/10ms）**：
+**HUART 结果表（CH340，2026-09-11 实测，HUART 回传构建态 `app.dcf`，码流 50760B，节流 512B/10ms）**：
 
 | 波特率 | 板端 got | 板端 err | drop | 回传比对 | RX判定 | TX判定 | 归因 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -276,7 +301,25 @@ TX 方向与 RX 实收内容解耦；对应脚本 TX 判定改为"回传内容�
 **HUART 最终结论（统一法：50760B 递增码流，512B+10ms 节流，双适配器交叉）**：
 - **RX 规格内最大无错档 = 2M**（CH340 规格上限处板端 got=50760 err=0 全对；921600/1.5M 双适配器一致）；
 - **TX 实测最大无错档 ≥1.5M**（双适配器回传零差异）；2M 档两颗适配器接收都失败，板端 TX@2M 本次无法验收（留 LA；历史帧测 TX 到 8M PASS、12M underrun，回环 PHY 到 9.5M）；
-- RX >2M 的板端能力本次无法用现有适配器验收（两者都超规格），依赖历史回环证据（9.5M PASS）与后续 LA。
+- RX >2M 的板端能力本次无法用现有适配器验收（两者都超规格）；后续本工程帧式板内回环已将无适配器证据加压确认至 9.5M（见项 2A）。
+
+## 项 2A：HUART 板内帧回环（PE7↔PB1，无适配器，2026-09-14）
+
+**目的**：将“芯片单块帧收发物理链路”与适配器、外部时钟域、HUART 连续多块缺陷分开。
+此项不替代项 2 的对外 50KB 回传；它验证的是板内短接、单块在途的 PHY 上限。
+
+**接线**：断开 CH340/CP210x 的数据 TX/RX，仅保留 COM9 调试口（PB3→COM9 RX、TX 悬空、GND 共地），用杜邦线短接 **PE7↔PB1**。
+
+**方法**：`huart_baud_test` 每帧发送 512B，DMA 接收缓冲也是独立的 512B；收满才触发 RX done，随后逐字节比较。五种码型（00/FF/55/AA/递增）都必须通过。筛选态每码型 100 帧；最高 PASS 档加压为每码型 1000 帧。
+
+| 阶段 | 波特率 | 数据量/判定 | 结果 |
+| --- | --- | --- | --- |
+| 筛选 | 1.5M、2M、2.5M、3M、4M、6M、8M、9M、**9.5M** | 五码型 × 100 帧 × 512B，逐字节比较 | **全部 PASS** |
+| 边界 | **10M** | 同上 | **FAIL**：00/55/AA/递增失败，FF 单独通过不构成通道通过 |
+| 加压 | **9.5M** | 五码型 × 1000 帧 × 512B = **2,560,000B** | **全部 PASS，错误日志 0、超时 0** |
+
+**结论**：本工程 HUART 的 PE7(TX)↔PB1(RX) 板内单块帧回环最大无错档为 **9.5 Mbps**；10M 是实测误码边界。该结果与同事工程 PB4↔PB3 的历史 9.5M/10M 边界一致，且本工程实际引脚已直接验证，无需切 PB4↔PB3 fallback。
+
 
 ## 项 3：LA 线级验证（按需，用于 §2.4 归因）
 
