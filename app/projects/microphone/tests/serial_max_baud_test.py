@@ -11,6 +11,11 @@ serial_max_baud_test.py - 普通串口(UART2)/高速串口(HUART) 最大波特�
   python serial_max_baud_test.py --debug-com COM9 --data-com COM17 --periph uart2  --adapter ch340
   python serial_max_baud_test.py --debug-com COM9 --data-com COM19 --periph huart --adapter cp210x
   python serial_max_baud_test.py ... --bauds 2000000,3000000   # 只关注部分档位(其余档自动打点跳过)
+  python serial_max_baud_test.py --mode loopback --periph uart2    # 板内回环(TX短接RX)，纯 COM9 监听
+
+回环模式（--mode loopback，配合固件 SERIAL_MAX_BAUD_TEST_LOOPBACK_EN=1）：
+  板上 PE7(TX) 与 PB1(RX) 杜邦线短接，板子自发 32KB 递增码流自发收并板端校验，
+  不需要适配器与数据口，脚本只监听调试口记 [rx] 统计出表。
 
 节流 profile（与固件结构约束对齐，详见 docs/peripheral/serial_max_baud_test_plan.md）：
   huart: 512B 块 + 10ms 间隔（规避 HUART 库非环形模式连续块缺陷，块长须=固件 DMA 块长）
@@ -33,6 +38,11 @@ PROMPT_RE = re.compile(r"\[Baud (\d+)\] waiting PC data\.\.\.")
 RX_RE = re.compile(r"\[rx\] got=(\d+) err=(\d+) first_err=(-?\d+) drop=(\d+)")
 ECHO_RE = re.compile(r"\[echo\] (\d+) bytes sent")
 DONE_RE = re.compile(r"=== Serial Max Baud Test Done ===")
+
+LOOP_PROMPT_RE = re.compile(r"\[Loop\]\[Baud (\d+)\] running\.\.\.")
+LOOP_BANNER_RE = re.compile(r"=== Serial Max Baud Loopback \((\w+)\) Start ===")
+LOOP_DONE_RE = re.compile(r"=== Serial Max Baud Loopback Done ===")
+LOOP_EXPECT = 32768   # 与固件 SERIAL_MAX_BAUD_TEST_LOOP_SIZE 一致
 
 PROFILES = {
     "huart": {"chunk": 512, "delay_ms": 10},
@@ -166,10 +176,92 @@ def poke_advance(ser):
     time.sleep(0.1)
 
 
+def run_loopback(args, dbg, out_path, only_bauds):
+    """板内回环模式：板子 TX 短接 RX 自发自收，PC 只监听调试口记 [rx] 统计。"""
+    hdr = "| 波特率 | got | err | first_err | drop | 回环判定 |"
+    sep = "| --- | --- | --- | --- | --- |"
+    print(hdr)
+    with open(out_path, "a", encoding="utf-8") as f:
+        f.write("\n## run: mode=loopback periph=%s %s\n%s\n%s\n" %
+                (args.periph, time.strftime("%Y-%m-%d %H:%M:%S"), hdr, sep))
+    results = []
+
+    def emit(baud, got, err, first_err, drop):
+        ok = (got == LOOP_EXPECT and err == 0 and drop == 0)
+        row = "| %d | %d | %d | %d | %d | %s |" % (
+            baud, got, err, first_err, drop, "PASS" if ok else "FAIL")
+        results.append((baud, ok))
+        print(row)
+        with open(out_path, "a", encoding="utf-8") as f:
+            f.write(row + "\n")
+
+    print("等待板端回环横幅...（请按一下板子复位键，PE7-PB1 短接线保持不动）")
+    combined = re.compile(LOOP_BANNER_RE.pattern + "|" + LOOP_PROMPT_RE.pattern)
+    pending_baud = None
+    first = dbg.wait_re(combined, 300)
+    if first:
+        if first.group(1):
+            print("板端横幅: %s" % first.group(0))
+            dbg.lines.clear()   # 丢弃复位前的陈旧输出
+            if first.group(1) != args.periph.upper():
+                print("!! 固件外设(%s)与 --periph(%s) 不一致，请确认烧录的固件" % (first.group(1), args.periph))
+        else:
+            pending_baud = int(first.group(2))
+            print("脚本中途接入，从当前档 %d 开始记录（之前的档位已错过）" % pending_baud)
+    else:
+        print("!! 300s 未等到回环横幅/档位提示（板子可能不是回环测试固件），仍继续尝试……")
+
+    while True:
+        # 等下一档提示或 Done 横幅（回环梯子全程板端自驱，低档位单档可达数秒）
+        deadline = time.time() + 120
+        m = None
+        done = False
+        if pending_baud is not None:
+            baud = pending_baud
+            pending_baud = None
+        else:
+            while time.time() < deadline:
+                line = dbg.next_line(0.3)
+                if line is None:
+                    continue
+                if LOOP_DONE_RE.search(line):
+                    done = True
+                    break
+                mp = LOOP_PROMPT_RE.search(line)
+                if mp:
+                    m = mp
+                    break
+                if line.strip():
+                    print("    [板] " + line)
+            if done:
+                break
+            if not m:
+                print("!! 120s 内未收到 [Loop][Baud] 提示或 Done 横幅，退出")
+                break
+            baud = int(m.group(1))
+        print("[Loop Baud %d] 板端回环运行中..." % baud)
+        rxm = dbg.wait_re(RX_RE, 120)
+        if not rxm:
+            print("!! 未收到板端 [rx] 统计")
+            break
+        got, err, first_err, drop = (int(rxm.group(i)) for i in (1, 2, 3, 4))
+        if only_bauds is not None and baud not in only_bauds:
+            continue
+        emit(baud, got, err, first_err, drop)
+
+    print(sep)
+    if results:
+        ok_bauds = [b for b, ok in results if ok]
+        print("回环最大无错档: %s" % (max(ok_bauds) if ok_bauds else None,))
+    print("完成。结果已追加到 %s" % out_path)
+
+
 def main():
     ap = argparse.ArgumentParser(description="普通/高速串口最大波特率统一测试")
+    ap.add_argument("--mode", choices=["echo", "loopback"], default="echo",
+                    help="echo=适配器回传法(需 --data-com)；loopback=板内 TX 短接 RX 回环(纯 COM9 监听)")
     ap.add_argument("--debug-com", default="COM9", help="调试口(UART0/PB3,1.5M)，默认 COM9")
-    ap.add_argument("--data-com", required=True, help="数据口(适配器接 PE7/PB1)")
+    ap.add_argument("--data-com", default=None, help="数据口(适配器接 PE7/PB1)；echo 模式必填")
     ap.add_argument("--periph", choices=["uart2", "huart"], required=True)
     ap.add_argument("--adapter", choices=["ch340", "cp210x"], default="ch340", help="适配器型号(仅用于结果标注)")
     ap.add_argument("--file", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "huart_dual_inc.bin"),
@@ -181,6 +273,23 @@ def main():
                     help="板子已停在某一档等待数据时，直接从该档开始(跳过横幅/首条提示等待)")
     ap.add_argument("--out", default=None, help="结果 markdown 追加文件(默认 tests/serial_max_baud_results.md)")
     args = ap.parse_args()
+
+    if args.mode == "echo" and not args.data_com:
+        print("echo 模式必须提供 --data-com（loopback 模式才可省略）")
+        sys.exit(2)
+
+    if args.mode == "loopback":
+        if args.data_com:
+            print("回环模式不需要 --data-com，忽略该参数")
+        out_path = args.out or os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                            "serial_max_baud_results.md")
+        only_bauds = set(int(x) for x in args.bauds.split(",")) if args.bauds else None
+        dbg = DebugReader(args.debug_com, DEBUG_BAUD)
+        try:
+            run_loopback(args, dbg, out_path, only_bauds)
+        finally:
+            dbg.close()
+        return
 
     if args.data_com.lower() == "list":
         list_com_ports()

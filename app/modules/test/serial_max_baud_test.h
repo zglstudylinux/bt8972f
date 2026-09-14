@@ -8,6 +8,7 @@
  * 自动切下一档。外设由 SERIAL_MAX_BAUD_TEST_USE_UART2 编译期二选一，
  * 两外设共用 PE7/PB1 接线，烧不同固件即可，接线不变。
  * 节流约束与归因规则见 docs/peripheral/serial_max_baud_test_plan.md。
+ * 另有两种自发模式：TX-LA（逻辑分析仪解 TX 线）、LOOPBACK（板内 TX 短接 RX）。
  */
 #ifndef __SERIAL_MAX_BAUD_TEST_H
 #define __SERIAL_MAX_BAUD_TEST_H
@@ -55,6 +56,34 @@ void serial_max_baud_test_start(void);
 // TX-LA 每档发送前的静默窗口（PC 收到 arm 提示后用该窗口启动 LA 采集）
 #ifndef SERIAL_MAX_BAUD_TEST_TX_LA_GAP_MS
 #define SERIAL_MAX_BAUD_TEST_TX_LA_GAP_MS    1500
+#endif
+
+// UART2 自抑制探针：GPIO bitbang PE7→PB1 与 UART2DATA 硬件 TX→RX 做单字节 A/B。
+// 仅用于确认普通 UART2 是否在自身发送期间屏蔽 RX，不参与波特率梯子。
+#ifndef SERIAL_MAX_BAUD_TEST_UART2_PROBE_EN
+#define SERIAL_MAX_BAUD_TEST_UART2_PROBE_EN  0
+#endif
+
+// 回环模式：1=启用后 start() 走板内回环梯子（TX 短接 RX，无需适配器，
+// 纯板端自发码流自发收，测板子自身收发链路的最大无错波特率）
+#ifndef SERIAL_MAX_BAUD_TEST_LOOPBACK_EN
+#define SERIAL_MAX_BAUD_TEST_LOOPBACK_EN     0
+#endif
+
+// 回环每档码流量（字节）；独立接收缓冲同尺寸（与发送源分离，HUART RX
+// 回调搬运不能覆盖在途的发送源）
+#ifndef SERIAL_MAX_BAUD_TEST_LOOP_SIZE
+#define SERIAL_MAX_BAUD_TEST_LOOP_SIZE       32768
+#endif
+
+// 回环等待单块回环接收完成的超时（HUART 单块在途模式逐块等待）
+#ifndef SERIAL_MAX_BAUD_TEST_LOOP_BLK_TIMEOUT_MS
+#define SERIAL_MAX_BAUD_TEST_LOOP_BLK_TIMEOUT_MS  100
+#endif
+
+// 回环连续无回数据块数达到该值判定本档失败，提前跳档（防高波特率死等）
+#ifndef SERIAL_MAX_BAUD_TEST_LOOP_MISS_ABORT
+#define SERIAL_MAX_BAUD_TEST_LOOP_MISS_ABORT 8
 #endif
 
 #endif // __SERIAL_MAX_BAUD_TEST_H
