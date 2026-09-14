@@ -70,6 +70,17 @@ void serial_max_baud_test_start(void);
 #define SERIAL_MAX_BAUD_TEST_LOOPBACK_EN     0
 #endif
 
+// 统一帧式回环：每码型帧数（筛选 100 / 加压 1000），与 huart_baud_test 口径一致。
+// 帧长固定 512B、5 种码型（00/FF/55/AA/递增）、逐帧逐字节比对。
+#ifndef SERIAL_MAX_BAUD_TEST_LOOP_FRAMES
+#define SERIAL_MAX_BAUD_TEST_LOOP_FRAMES     100
+#endif
+
+// 统一帧式回环加压态：1=梯子收敛为最大无错档单档（配 LOOP_FRAMES=1000 用）
+#ifndef SERIAL_MAX_BAUD_TEST_LOOP_STRESS
+#define SERIAL_MAX_BAUD_TEST_LOOP_STRESS     0
+#endif
+
 // 回环每档码流量（字节）；独立接收缓冲同尺寸（与发送源分离，HUART RX
 // 回调搬运不能覆盖在途的发送源）
 #ifndef SERIAL_MAX_BAUD_TEST_LOOP_SIZE

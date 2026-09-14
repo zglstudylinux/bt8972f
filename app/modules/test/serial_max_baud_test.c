@@ -38,9 +38,13 @@ static const u32 baud_rates[] = {
     24000000,
 };
 #elif SERIAL_MAX_BAUD_TEST_LOOPBACK_EN
-// 回环梯子：常规 8 档（同回传法阶梯）+ 探底档 4M~24M
-// （分频最高可配 24M，探底档预期失败，实测"能配多高 vs 实测多高"）
+// 统一帧式回环梯子（两外设同口径，与 huart_baud_test 帧回环一致）：低速常规档 +
+// 9M~12M 边界密集档；UART2 另加 16M/20M/24M 探底延伸。
+// 注意分频量化：16M/20M 档实际速率为 12M/24M（24M 只能整除），标注仍按名义值。
 static const u32 baud_rates[] = {
+#if SERIAL_MAX_BAUD_TEST_LOOP_STRESS
+    12000000,                       // 加压态：仅统一口径最大无错档
+#else
     115200,
     230400,
     460800,
@@ -48,12 +52,23 @@ static const u32 baud_rates[] = {
     1000000,
     1500000,
     2000000,
+    2500000,
     3000000,
     4000000,
+    5000000,
     6000000,
+    7000000,
     8000000,
+    9000000,
+    9500000,
+    10000000,
+    10500000,
+    11000000,
     12000000,
+    16000000,
+    20000000,
     24000000,
+#endif
 };
 #else
 // UART2 阶梯：3M 为 CH340 规格外档（CH340 规格上限 2M），用 CP210x 交叉验证
@@ -82,7 +97,7 @@ static const u32 baud_rates[] = {
     9500000,
 };
 #elif SERIAL_MAX_BAUD_TEST_LOOPBACK_EN
-// 回环梯子：常规 13 档（9.5M 对齐同事回环证据）+ 探底档 12M/16M/24M
+// 统一帧式回环梯子（与 UART2 侧完全同口径）：115200~12M，含 9M~12M 边界密集档
 static const u32 baud_rates[] = {
     115200,
     230400,
@@ -94,12 +109,16 @@ static const u32 baud_rates[] = {
     2500000,
     3000000,
     4000000,
+    5000000,
     6000000,
+    7000000,
     8000000,
+    9000000,
     9500000,
+    10000000,
+    10500000,
+    11000000,
     12000000,
-    16000000,
-    24000000,
 };
 #else
 // HUART 阶梯：9.5M 与回环 PHY 证据对齐（回环 10M 起误码，不设更高档）
@@ -627,94 +646,96 @@ static void uart2_self_suppress_probe(void)
 
 #if SERIAL_MAX_BAUD_TEST_LOOPBACK_EN
 
+/*
+ * 统一帧式回环口径（两外设完全一致，与 huart_baud_test 帧回环同构）：
+ *   512B 帧 × 5 码型（00/FF/55/AA/递增）× SERIAL_MAX_BAUD_TEST_LOOP_FRAMES 帧，
+ *   逐帧逐字节比对；连续 8 帧收不满 512B 提前终止该码型。
+ *   stop bit：UART2 驱动配 1 stop（SB2EN=0，与 HUART RX 行为对齐）。
+ */
+#define LOOP_FRAME_SIZE     512
+#define LOOP_MODE_CNT       5
+#define LOOP_TIMEOUT_MS     200
+#define LOOP_MISS_ABORT     8
+
+static void loopback_fill_pattern(u8 mode)
+{
+    u16 i;
+
+    for (i = 0; i < LOOP_FRAME_SIZE; i++) {
+        if (mode == 0) {
+            sm_buf[i] = 0x00;
+        } else if (mode == 1) {
+            sm_buf[i] = 0xff;
+        } else if (mode == 2) {
+            sm_buf[i] = 0x55;
+        } else if (mode == 3) {
+            sm_buf[i] = 0xaa;
+        } else {
+            sm_buf[i] = (u8)i;
+        }
+    }
+}
+
 #if SERIAL_MAX_BAUD_TEST_USE_UART2
 /**
- * @brief 回环单档（UART2）：紧循环边发边收。TX 128B 环形队列天然做流控窗口，
- *        process() 每轮 1 进 1 出（TX 队列提交 + RX 轮询排水）；RX 过载时字节
- *        计入 overflow（drop），如实测出轮询式驱动的结构性收发上限。
+ * @brief 发送一帧 512B 并等接收排空（边发边收 + 短排水），返回实收字节数。
  */
-static void loopback_rung_uart2(void)
+static u32 loopback_uart2_send_frame(void)
 {
-    u32 send_pos = 0;
+    u32 sent = 0;
     u32 guard;
-    u32 i;
 
-    for (i = 0; i < SERIAL_MAX_BAUD_TEST_LOOP_SIZE; i++) {
-        sm_buf[i] = (u8)(i & 0xFF);
-    }
-
-    while (send_pos < SERIAL_MAX_BAUD_TEST_LOOP_SIZE) {
-        u32 chunk = SERIAL_MAX_BAUD_TEST_LOOP_SIZE - send_pos;
+    while (sent < LOOP_FRAME_SIZE) {
+        u32 chunk = LOOP_FRAME_SIZE - sent;
         u16 written;
 
         if (chunk > UART2_TX_CHUNK) {
             chunk = UART2_TX_CHUNK;
         }
-        written = bsp_uart2_com_write(&sm_buf[send_pos], (u16)chunk);
-        send_pos += written;
-        periph_pump();      // RX 轮询排水 + TX 队列提交
+        written = bsp_uart2_com_write(&sm_buf[sent], (u16)chunk);
+        sent += written;
+        periph_pump();      // 发送期间持续排水 RX
     }
-
     guard = tick_get();
     while (!bsp_uart2_com_tx_idle() && !tick_check_expire(guard, 1000)) {
         periph_pump();
     }
-    guard = tick_get();
-    while (!tick_check_expire(guard, SERIAL_MAX_BAUD_TEST_IDLE_TIMEOUT_MS)) {
-        if (periph_pump()) {
-            guard = tick_get();
-        }
+    delay_us(200);          // 覆盖最后字节的 stop 位采样（任意档 >=2 字节时间）
+    while (periph_pump()) {
     }
-}
-#else
-/**
- * @brief 回环单档（HUART）：单块在途（发 512B -> 等 TX 完成 -> 等本块回环接收 ->
- *        下一块），任意时刻只有一块数据在环上，规避库非环形模式背靠背连续多块
- *        接收的错位缺陷。连续无回数据块达阈值判失败跳档。
- */
-static void loopback_rung_huart(void)
-{
-    u32 send_off = 0;
-    u8 miss_runs = 0;
-
-    while ((send_off < SERIAL_MAX_BAUD_TEST_LOOP_SIZE) &&
-           (miss_runs < SERIAL_MAX_BAUD_TEST_LOOP_MISS_ABORT)) {
-        u32 chunk = SERIAL_MAX_BAUD_TEST_LOOP_SIZE - send_off;
-        u32 rx_before = sm_state.rx_bytes;
-        u32 wait_start;
-
-        if (chunk > HUART_TX_CHUNK) {
-            chunk = HUART_TX_CHUNK;
-        }
-
-        sm_tx_done = 0;
-        huart_tx(&sm_buf[send_off], (u16)chunk);
-        wait_start = tick_get();
-        while (!sm_tx_done && !tick_check_expire(wait_start, 100)) {
-        }
-
-        wait_start = tick_get();
-        while ((sm_state.rx_bytes == rx_before) &&
-               !tick_check_expire(wait_start, SERIAL_MAX_BAUD_TEST_LOOP_BLK_TIMEOUT_MS)) {
-        }
-        miss_runs = (sm_state.rx_bytes == rx_before) ? (u8)(miss_runs + 1) : 0;
-        send_off += chunk;
-    }
-
-    delay_ms(SERIAL_MAX_BAUD_TEST_IDLE_TIMEOUT_MS);   // 等最后的在途数据落袋
+    return sm_state.rx_bytes;
 }
 #endif
 
 /**
- * @brief 回环梯子：板内 TX 短接 RX，自发 32KB 递增码流自发收，板端校验打印后
- *        自动爬梯（无适配器，PC 只看 COM9 调试口记表）。
+ * @brief 比较一帧，返回误码字节数。
+ */
+static u32 loopback_compare_frame(u32 got, u32 *err_bytes)
+{
+    u32 i;
+    u32 fe = 0;
+
+    for (i = 0; i < got; i++) {
+        if (sm_loop_rx[i] != sm_buf[i]) {
+            fe++;
+        }
+    }
+    *err_bytes += fe + (LOOP_FRAME_SIZE - got);
+    return fe;
+}
+
+/**
+ * @brief 回环梯子：板内 TX 短接 RX，统一帧式口径自动爬梯（无适配器，PC 只看
+ *        COM9 调试口记表）。每档 5 码型，PASS 需全部帧 512B 零误码。
  */
 static void serial_max_baud_test_loopback_ladder(void)
 {
     u8 baud_idx;
+    u8 mode_idx;
 
     printf("\n=== Serial Max Baud Loopback (%s) Start ===\n", PERIPH_NAME);
-    printf("[t] enter loopback ladder, wdt off\n");
+    printf("[t] unified frame loopback: %lu frames x 512B x 5 modes per baud\n",
+           (u32)SERIAL_MAX_BAUD_TEST_LOOP_FRAMES);
     sm_rx_dst = sm_loop_rx;
     sm_rx_cap = SERIAL_MAX_BAUD_TEST_LOOP_SIZE;
 
@@ -727,21 +748,64 @@ static void serial_max_baud_test_loopback_ladder(void)
         delay_ms(10);
         printf("[Loop][Baud %lu] running...\n", baud_rates[baud_idx]);
 
-#if SERIAL_MAX_BAUD_TEST_USE_UART2
-        loopback_rung_uart2();
-#else
-        loopback_rung_huart();
-#endif
-        verify_and_report();
-#if SERIAL_MAX_BAUD_TEST_USE_UART2
-        {
-            uart2_com_stats_t st;
+        for (mode_idx = 0; mode_idx < LOOP_MODE_CNT; mode_idx++) {
+            u32 frame;
+            u32 bad_frames = 0;
+            u32 err_bytes = 0;
+            u32 miss = 0;
+            u32 last_got = 0;
 
-            bsp_uart2_com_get_stats(&st);
-            printf("  [rxstat] hw_pending=%lu sw=%lu ovf=%lu\n",
-                   st.rx_pending_count, st.rx_byte_count, st.rx_overflow_count);
-        }
+            loopback_fill_pattern((u8)mode_idx);
+            for (frame = 0; frame < SERIAL_MAX_BAUD_TEST_LOOP_FRAMES; frame++) {
+                u32 got;
+                u32 fe;
+
+                sm_state.rx_bytes = 0;
+                sm_state.drop_cnt = 0;
+                sm_state.new_data = 0;
+#if SERIAL_MAX_BAUD_TEST_USE_UART2
+                got = loopback_uart2_send_frame();
+#else
+                {
+                    u32 wait_start;
+
+                    sm_tx_done = 0;
+                    huart_tx(sm_buf, LOOP_FRAME_SIZE);
+                    wait_start = tick_get();
+                    while (!sm_tx_done && !tick_check_expire(wait_start, 100)) {
+                    }
+                    wait_start = tick_get();
+                    while ((sm_state.rx_bytes < LOOP_FRAME_SIZE) &&
+                           !tick_check_expire(wait_start, LOOP_TIMEOUT_MS)) {
+                    }
+                    got = sm_state.rx_bytes;
+                }
 #endif
+                if (got != LOOP_FRAME_SIZE) {
+                    bad_frames++;
+                    miss++;
+                    last_got = got;
+                    if (miss >= LOOP_MISS_ABORT) {
+                        break;
+                    }
+                    continue;
+                }
+                miss = 0;
+                last_got = got;
+                fe = loopback_compare_frame(got, &err_bytes);
+                if (fe) {
+                    bad_frames++;
+                }
+            }
+
+            if (bad_frames == 0) {
+                printf("  [mode%d] PASS (%lu frames)\n", mode_idx,
+                       (u32)SERIAL_MAX_BAUD_TEST_LOOP_FRAMES);
+            } else {
+                printf("  [mode%d] FAIL, bad_frames=%lu err_bytes=%lu last_got=%lu\n",
+                       mode_idx, bad_frames, err_bytes, last_got);
+            }
+        }
     }
 
     printf("\n=== Serial Max Baud Loopback Done ===\n");

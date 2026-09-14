@@ -207,10 +207,10 @@ void bsp_uart2_com_init(u32 baudrate)
     UART2BAUD = baud;           // 手册 12-3：低 16 位为分频(Baud=Fudet/BAUD+1)，高 16 位 DARTBAUD 只读
 
     FUNCMCON2 = (FUNCMCON2 & ~0xff00) | TX2MAP_PE7 | RX2MAP_PB1;
-    // 双线全双工：ONELINE=0(TX/RX separate)、RXEN、FIXBAUD、2 stop、UTEN。
+    // 双线全双工：ONELINE=0(TX/RX separate)、RXEN、FIXBAUD、1 stop(与 HUART 对齐)、UTEN。
     // KEYIE/KEYEN/RSTEN 三域写 0x5 全关——原模板的 0xaaa 是把 key 检测功能全开。
     // 注意 ONELINE=1 时发送期间 RX 被硬件门控，同实例自发自收必须用双线模式。
-    UART2CON = BIT(7) | BIT(5) | BIT(4) | BIT(0);
+    UART2CON = BIT(7) | BIT(5) | BIT(0);
     UART2CON |= (0x5 << 24) | (0x5 << 20) | (0x5 << 16);
     UART2CPND = BIT(8) | BIT(9);
     UART2CPND |= BIT(10) | BIT(15);

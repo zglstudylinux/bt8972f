@@ -87,12 +87,23 @@ python tests/la_validate_frames.py C:/tmp/cap.csv
 
 ### 串口板内帧回环/自回环（huart_baud_test + serial_max_baud_test，2026-09-14）
 
-- **HUART 帧式回环**：见下节，PE7↔PB1 短接，9.5M 加压 2.56MB 零误码、10M 起误码；
+统一口径：512B 帧 × 5 码型（00/FF/55/AA/递增）× 100 帧（筛选）/1000 帧（加压），
+1 stop，同梯子 115200~12M（含 9M~12M 边界密集档），逐帧逐字节比对。同口径结论：
+
+| 外设 | 板内回环最大无错档 | 边界 |
+|---|---|---|
+| **UART2**（serial_max_baud_test，LOOPBACK_EN=1） | **12 Mbps**（12M 加压 2.56MB 零误码） | 24M 字节全到但误码（16M/20M 档分频量化为 12M/24M） |
+| **HUART**（huart_baud_test，帧式回环） | **9.5 Mbps**（9.5M 加压 2.56MB 零误码） | 10M+ 仅 FF 恒值存活，非恒值全败 |
+
+- **HUART 帧式回环**：PE7↔PB1 短接；`HUART_BAUD_TEST_EN=1` +
+  `HUART_BAUD_TEST_MODE=LOOPBACK` + `PINSET=PE7_PB1`，关
+  `SERIAL_MAX_BAUD_TEST_EN`/`UART2_COM_EN`/`HUART_COM_EN`/`EQ_DBG_IN_UART`。
+  每帧 TX/RX 独立 512B 缓冲（RX done 必须对应整帧，帧长≠rxbuf_size 会卡死）；
 - **UART2 双线回环**：`SERIAL_MAX_BAUD_TEST_EN=1` + `USE_UART2=1` + `LOOPBACK_EN=1`
-  （探针宏 `UART2_PROBE_EN` 保持 0），PE7↔PB1 短接，32KB/档自发自收。
+  （`UART2_PROBE_EN` 保持 0），同一梯子与判定。
   **要求驱动为修复版**：`bsp_uart2_com.c` 需 ONELINE=0（双线）+ TX 脚输出方向 +
   key 三域 0x555 全关——单线模板配置下自回环全零（根因分析见
-  serial_max_baud_test_plan.md 项 2B）。实测 115200~12M 全 PASS、24M 字节全到但误码。
+  serial_max_baud_test_plan.md 项 2B）。
 
 ### HUART 帧式板内回环（`huart_baud_test`，2026-09-14）
 
