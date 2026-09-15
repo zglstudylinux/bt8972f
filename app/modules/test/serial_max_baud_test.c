@@ -644,6 +644,221 @@ static void uart2_self_suppress_probe(void)
 
 #endif
 
+#if SERIAL_MAX_BAUD_TEST_TPUT_EN
+
+/*
+ * 满吞吐回环：固定波特率下连续自发自发收、在线比对，测可达吞吐与误码。
+ *   UART2 = 连续流（TX 128B 环形队列流控 + 逐字节排水比对）；
+ *   HUART = SAFE（单块握手，规避库非环形连续块缺陷）与 B2B（背靠背 DMA，
+ *   预期暴露"重武装窗口丢字节"库缺陷——如实区分库缺陷与 PHY 误码）。
+ * 码型统一为 0~255 递增循环 + 按位置比对（非恒值）：丢字节/位错/块错位均可检出。
+ */
+#define TPUT_BLOCK      512
+#define TPUT_RX_WIN     4096                // HUART 接收校验窗口（缓冲第 i 字节应为 i&0xFF）
+#define TPUT_RX_TIMEOUT_MS  200
+
+static u8 tput_rx[TPUT_RX_WIN] AT(.buf.serial_max);   // HUART 吞吐接收校验缓冲
+
+static void tput_report(const char *tag, u32 ms, u32 tx, u32 rx, u32 err, s32 first_err)
+{
+    u32 kb;
+
+    if (ms == 0) {
+        ms = 1;
+    }
+    kb = (u32)((u64)rx * 1000 / ms / 1024);         // 实收吞吐 KB/s
+    printf("[TPUT][%s] time=%lums tx=%lu rx=%lu err=%lu first_err=%ld tput=%luKB/s\n",
+           tag, ms, tx, rx, err, first_err, kb);
+}
+
+#if SERIAL_MAX_BAUD_TEST_USE_UART2
+/**
+ * @brief 满吞吐（UART2）：256B 递增图案无缝循环发送，逐字节在线比对。
+ */
+static void tput_uart2_run(void)
+{
+    u32 start;
+    u32 mark;
+    u32 sent = 0;
+    u32 recv = 0;
+    u32 err = 0;
+    s32 first_err = -1;
+    u8 ch;
+
+    for (ch = 0; ch < 255; ch++) {                  // 0..255 递增图案
+        sm_buf[ch] = ch;
+    }
+    sm_buf[255] = 255;
+
+    start = tick_get();
+    mark = start;
+    while (!tick_check_expire(start, SERIAL_MAX_BAUD_TEST_TPUT_MS)) {
+        u32 off = sent & 0xFF;
+        u32 chunk = 256 - off;
+
+        if (chunk > 64) {
+            chunk = 64;
+        }
+        sent += bsp_uart2_com_write(&sm_buf[off], (u16)chunk);
+        bsp_uart2_com_process();
+        while (bsp_uart2_com_get(&ch)) {
+            if (ch != (u8)(recv & 0xFF)) {
+                err++;
+                if (first_err < 0) {
+                    first_err = (s32)recv;
+                }
+            }
+            recv++;
+        }
+        if (tick_check_expire(mark, 1000)) {
+            mark = tick_get();
+            printf("[TPUT][UART2] t=%lums sent=%lu recv=%lu err=%lu\n",
+                   tick_get() - start, sent, recv, err);
+        }
+    }
+    delay_us(500);                                  // 排空最后的在途字节
+    bsp_uart2_com_process();
+    while (bsp_uart2_com_get(&ch)) {
+        if (ch != (u8)(recv & 0xFF)) {
+            err++;
+        }
+        recv++;
+    }
+    tput_report("UART2", tick_get() - start, sent, recv, err, first_err);
+}
+#else
+/**
+ * @brief 满吞吐（HUART SAFE）：单块握手——发 512B 等 TX 完成、等 RX 块完成、
+ *        比对后下一块（规避库非环形连续块缺陷）。
+ */
+static void tput_huart_safe(void)
+{
+    u32 start;
+    u32 mark;
+    u32 tx = 0;
+    u32 rx = 0;
+    u32 err = 0;
+    u16 i;
+
+    for (i = 0; i < TPUT_BLOCK; i++) {
+        sm_buf[i] = (u8)i;                          // 递增图案（位置相关）
+    }
+    start = tick_get();
+    mark = start;
+    while (!tick_check_expire(start, SERIAL_MAX_BAUD_TEST_TPUT_MS)) {
+        u32 wait_start;
+
+        sm_state.rx_bytes = 0;
+        sm_state.drop_cnt = 0;
+        sm_state.new_data = 0;
+        sm_tx_done = 0;
+        huart_rxfifo_clear();
+        huart_tx(sm_buf, TPUT_BLOCK);
+        tx += TPUT_BLOCK;
+        wait_start = tick_get();
+        while (!sm_tx_done && !tick_check_expire(wait_start, 100)) {
+        }
+        wait_start = tick_get();
+        while ((sm_state.rx_bytes < TPUT_BLOCK) &&
+               !tick_check_expire(wait_start, TPUT_RX_TIMEOUT_MS)) {
+        }
+        rx += sm_state.rx_bytes;
+        for (i = 0; i < (u16)sm_state.rx_bytes; i++) {
+            if (tput_rx[i] != (u8)i) {              // 按位置比对：丢字节即错位可检出
+                err++;
+            }
+        }
+        if (tick_check_expire(mark, 1000)) {
+            mark = tick_get();
+            printf("[TPUT][HUART-SAFE] tx=%lu rx=%lu err=%lu\n", tx, rx, err);
+        }
+    }
+    tput_report("HUART-SAFE", tick_get() - start, tx, rx, err, -1);
+}
+
+/**
+ * @brief 满吞吐（HUART B2B）：TX 块完成后立即续发下一块（0x55 图案），RX 连续
+ *        接收。tx/rx 差额即"重武装窗口丢字节"（库缺陷），非 0x55 字节即位/帧错。
+ */
+static void tput_huart_b2b(void)
+{
+    u32 start;
+    u32 tx = 0;
+    u32 err = 0;
+    u16 i;
+
+    for (i = 0; i < TPUT_BLOCK; i++) {
+        sm_buf[i] = (u8)i;                          // 递增图案（位置相关）
+    }
+    sm_state.rx_bytes = 0;
+    sm_state.drop_cnt = 0;
+    sm_state.new_data = 0;
+    sm_tx_done = 0;
+    huart_rxfifo_clear();
+    huart_tx(sm_buf, TPUT_BLOCK);
+    tx += TPUT_BLOCK;
+
+    start = tick_get();
+    while (!tick_check_expire(start, SERIAL_MAX_BAUD_TEST_TPUT_MS)) {
+        if (sm_tx_done) {
+            sm_tx_done = 0;
+            huart_tx(sm_buf, TPUT_BLOCK);
+            tx += TPUT_BLOCK;
+        }
+        if (sm_state.new_data) {
+            u32 end = sm_state.rx_bytes;
+            u32 st0 = (end >= TPUT_BLOCK) ? end - TPUT_BLOCK : 0;
+
+            sm_state.new_data = 0;
+            for (i = (u16)st0; i < end; i++) {
+                if (tput_rx[i] != (u8)(i & 0xFF)) {  // 缓冲第 i 个字节应为 i&0xFF
+                    err++;
+                }
+            }
+        }
+    }
+    {
+        u32 kept = sm_state.rx_bytes;
+        u32 lost = (tx > (kept + sm_state.drop_cnt)) ?
+                   (tx - kept - sm_state.drop_cnt) : 0;
+
+        printf("[TPUT][HUART-B2B] tx=%lu kept=%lu drop=%lu lost=%lu err=%lu\n",
+               tx, kept, sm_state.drop_cnt, lost, err);
+        tput_report("HUART-B2B", tick_get() - start, kept, kept, err, -1);
+    }
+}
+#endif
+
+/**
+ * @brief 满吞吐回环入口：固定波特率，按外设执行对应吞吐段。
+ */
+static void serial_max_baud_test_tput(void)
+{
+    printf("\n=== Serial Max Baud Throughput (%s @ %lu) ===\n",
+           PERIPH_NAME, (u32)SERIAL_MAX_BAUD_TEST_TPUT_BAUD);
+    printf("[t] pattern=inc(w UART2 inc), %lums window, theoretical max = baud/10 B/s\n",
+           (u32)SERIAL_MAX_BAUD_TEST_TPUT_MS);
+    sm_rx_dst = tput_rx;
+    sm_rx_cap = TPUT_RX_WIN;
+
+    periph_init(SERIAL_MAX_BAUD_TEST_TPUT_BAUD);
+    delay_ms(10);
+
+#if SERIAL_MAX_BAUD_TEST_USE_UART2
+    tput_uart2_run();
+#else
+    tput_huart_safe();
+    // 复位后重配再跑 B2B（SAFE 结束后 FIFO/块状态复位，保证两段独立）
+    periph_init(SERIAL_MAX_BAUD_TEST_TPUT_BAUD);
+    delay_ms(10);
+    tput_huart_b2b();
+#endif
+
+    printf("\n=== Serial Max Baud Throughput Done ===\n");
+}
+
+#endif /* SERIAL_MAX_BAUD_TEST_TPUT_EN */
+
 #if SERIAL_MAX_BAUD_TEST_LOOPBACK_EN
 
 /*
@@ -827,6 +1042,8 @@ void serial_max_baud_test_start(void)
 
 #if SERIAL_MAX_BAUD_TEST_TX_LA_EN
     serial_max_baud_test_txla_loop();
+#elif SERIAL_MAX_BAUD_TEST_TPUT_EN
+    serial_max_baud_test_tput();
 #elif SERIAL_MAX_BAUD_TEST_LOOPBACK_EN && SERIAL_MAX_BAUD_TEST_USE_UART2 && \
       SERIAL_MAX_BAUD_TEST_UART2_PROBE_EN
     uart2_self_suppress_probe();

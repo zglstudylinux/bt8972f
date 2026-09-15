@@ -81,6 +81,20 @@ void serial_max_baud_test_start(void);
 #define SERIAL_MAX_BAUD_TEST_LOOP_STRESS     0
 #endif
 
+// 满吞吐回环：固定波特率下连续自发自发收、在线比对，测可达吞吐与误码。
+// UART2=连续流；HUART=单块握手（SAFE）与背靠背 DMA（B2B）各测一段。
+#ifndef SERIAL_MAX_BAUD_TEST_TPUT_EN
+#define SERIAL_MAX_BAUD_TEST_TPUT_EN         0
+#endif
+
+#ifndef SERIAL_MAX_BAUD_TEST_TPUT_BAUD
+#define SERIAL_MAX_BAUD_TEST_TPUT_BAUD       9500000
+#endif
+
+#ifndef SERIAL_MAX_BAUD_TEST_TPUT_MS
+#define SERIAL_MAX_BAUD_TEST_TPUT_MS         5000
+#endif
+
 // 回环每档码流量（字节）；独立接收缓冲同尺寸（与发送源分离，HUART RX
 // 回调搬运不能覆盖在途的发送源）
 #ifndef SERIAL_MAX_BAUD_TEST_LOOP_SIZE

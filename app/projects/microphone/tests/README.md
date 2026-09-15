@@ -95,6 +95,10 @@ python tests/la_validate_frames.py C:/tmp/cap.csv
 | **UART2**（serial_max_baud_test，LOOPBACK_EN=1） | **12 Mbps**（12M 加压 2.56MB 零误码） | 24M 字节全到但误码（16M/20M 档分频量化为 12M/24M） |
 | **HUART**（huart_baud_test，帧式回环） | **9.5 Mbps**（9.5M 加压 2.56MB 零误码） | 10M+ 仅 FF 恒值存活，非恒值全败 |
 
+同 9.5M 满吞吐回环实测（`TPUT_EN=1`，5s 窗口，递增图案在线比对）：**UART2 连续流
+77 KB/s vs HUART 375 KB/s（单块握手）/ 482 KB/s（背靠背）**，双方零误码——同波特率
+下高速串口吞吐为普通串口的 5~6 倍（serial_max_baud_test_plan.md 项 2C）。
+
 - **HUART 帧式回环**：PE7↔PB1 短接；`HUART_BAUD_TEST_EN=1` +
   `HUART_BAUD_TEST_MODE=LOOPBACK` + `PINSET=PE7_PB1`，关
   `SERIAL_MAX_BAUD_TEST_EN`/`UART2_COM_EN`/`HUART_COM_EN`/`EQ_DBG_IN_UART`。
